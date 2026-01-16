@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 
-export const Hero: React.FC = () => {
+interface HeroProps {
+  onStart?: () => void;
+}
+
+export const Hero: React.FC<HeroProps> = ({ onStart }) => {
   const [scrollOpacity, setScrollOpacity] = useState(1);
 
   useEffect(() => {
     const handleScroll = () => {
-      // Desaparece gradualmente en los primeros 300px
       const opacity = Math.max(0, 1 - window.scrollY / 300);
       setScrollOpacity(opacity);
     };
@@ -33,7 +36,10 @@ export const Hero: React.FC = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-5 reveal" style={{ animationDelay: '0.7s' }}>
-          <button className="w-full sm:w-auto px-10 py-4 bg-[#00F3FF] text-[#080A0F] font-bold rounded-2xl text-base hover:scale-[1.02] transition-all glow-cyan shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-2">
+          <button 
+            onClick={onStart}
+            className="w-full sm:w-auto px-10 py-4 bg-[#00F3FF] text-[#080A0F] font-bold rounded-2xl text-base hover:scale-[1.02] transition-all glow-cyan shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-2"
+          >
             DESCUBRIR MI PERFIL <ChevronRight className="w-5 h-5" />
           </button>
           <button className="w-full sm:w-auto px-10 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold rounded-2xl text-base transition-all">
@@ -42,7 +48,6 @@ export const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Indicador de scroll sofisticado */}
       <div 
         className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-opacity duration-500 pointer-events-none"
         style={{ opacity: scrollOpacity }}

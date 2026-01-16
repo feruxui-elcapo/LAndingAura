@@ -2,7 +2,11 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 
-export const CTA: React.FC = () => {
+interface CTAProps {
+  onStart?: () => void;
+}
+
+export const CTA: React.FC<CTAProps> = ({ onStart }) => {
   return (
     <section className="py-40 px-6 relative overflow-hidden">
       <div className="max-w-5xl mx-auto relative z-10 text-center">
@@ -14,7 +18,10 @@ export const CTA: React.FC = () => {
           Unite a Aura y transformá el misterio en claridad. Conocerte nunca fue tan preciso ni tan visual.
         </p>
         <div className="flex flex-col items-center gap-8">
-          <button className="px-16 py-6 bg-[#00F3FF] text-[#080A0F] font-bold rounded-[32px] text-2xl hover:scale-105 transition-all glow-cyan shadow-2xl shadow-cyan-500/20 flex items-center gap-4">
+          <button 
+            onClick={onStart}
+            className="px-16 py-6 bg-[#00F3FF] text-[#080A0F] font-bold rounded-[32px] text-2xl hover:scale-105 transition-all glow-cyan shadow-2xl shadow-cyan-500/20 flex items-center gap-4"
+          >
             EMPEZAR EL CAMINO <ArrowRight className="w-8 h-8" />
           </button>
           <div className="text-[11px] text-white/20 uppercase tracking-[0.5em] font-bold">

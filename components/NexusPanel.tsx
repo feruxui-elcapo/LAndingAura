@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Terminal, ChevronLeft, Users, Settings2, BarChart3, CloudUpload, Search, Plus, Filter, ShieldCheck, Globe, Trash2, Edit3, X, Save, Download, FileSpreadsheet, Upload } from 'lucide-react';
+import { Database, Terminal, ChevronLeft, ChevronDown, Users, Settings2, BarChart3, CloudUpload, Search, Plus, Filter, ShieldCheck, Globe, Trash2, Edit3, X, Save, Download, FileSpreadsheet, Upload, Check } from 'lucide-react';
 import { TestDefinition, PerformanceLog, BiometricPoint, UserRole } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -28,6 +28,28 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
 
   const [newQuestionText, setNewQuestionText] = useState('');
   const [newQuestionCategory, setNewQuestionCategory] = useState('');
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+
+  const TEST_TYPE_OPTIONS = [
+    { value: 'mfc', label: 'MFC (Psicometría)' },
+    { value: 'bart', label: 'BART (Riesgo)' },
+    { value: 'gonogo', label: 'Go/No-Go (Impulso)' },
+    { value: 'likert', label: 'Encuesta Likert' },
+  ];
+
+  // Research Filters
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [filterCountry, setFilterCountry] = useState('');
+  const [filterTestId, setFilterTestId] = useState('');
+
+  const filteredEvaluations = evaluations.filter(ev => {
+    if (filterDateFrom && new Date(ev.timestamp) < new Date(filterDateFrom)) return false;
+    if (filterDateTo && new Date(ev.timestamp) > new Date(filterDateTo)) return false;
+    if (filterCountry && ev.country !== filterCountry) return false;
+    if (filterTestId && ev.testId !== filterTestId) return false;
+    return true;
+  });
 
   const handleSaveTest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,16 +296,87 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
 
             {activeTab === 'research' && (
               <motion.div key="research" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                   <h2 className="text-xl font-black uppercase tracking-widest">Panel de Investigación</h2>
                   <button
-                    onClick={() => exportToCSV(evaluations, "AURA_Research_Data")}
-                    disabled={evaluations.length === 0}
+                    onClick={() => exportToCSV(filteredEvaluations, "AURA_Research_Data")}
+                    disabled={filteredEvaluations.length === 0}
                     className="px-4 py-2 bg-[#7B2CBF] text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all hover:bg-[#8e44ad] disabled:opacity-20 disabled:cursor-not-allowed"
                   >
                     <Download className="w-3 h-3" /> Descargar Raw Data (.CSV)
                   </button>
                 </div>
+
+                {/* Filtros */}
+                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Filter className="w-4 h-4 text-[#00F3FF]" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Filtros de Búsqueda</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/30">Fecha Desde</label>
+                      <input
+                        type="date"
+                        value={filterDateFrom}
+                        onChange={e => setFilterDateFrom(e.target.value)}
+                        className="w-full bg-[#1a1d28] border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white outline-none focus:border-[#00F3FF]"
+                        style={{ colorScheme: 'dark' }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/30">Fecha Hasta</label>
+                      <input
+                        type="date"
+                        value={filterDateTo}
+                        onChange={e => setFilterDateTo(e.target.value)}
+                        className="w-full bg-[#1a1d28] border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white outline-none focus:border-[#00F3FF]"
+                        style={{ colorScheme: 'dark' }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/30">País</label>
+                      <select
+                        value={filterCountry}
+                        onChange={e => setFilterCountry(e.target.value)}
+                        className="w-full bg-[#1a1d28] border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white outline-none focus:border-[#00F3FF]"
+                        style={{ colorScheme: 'dark' }}
+                      >
+                        <option value="">Todos</option>
+                        <option value="AR">Argentina</option>
+                        <option value="MX">México</option>
+                        <option value="CL">Chile</option>
+                        <option value="CO">Colombia</option>
+                        <option value="ES">España</option>
+                        <option value="LATAM">LATAM (Otros)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/30">Test</label>
+                      <select
+                        value={filterTestId}
+                        onChange={e => setFilterTestId(e.target.value)}
+                        className="w-full bg-[#1a1d28] border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white outline-none focus:border-[#00F3FF]"
+                        style={{ colorScheme: 'dark' }}
+                      >
+                        <option value="">Todos</option>
+                        {catalog.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-[9px] text-white/30">
+                      Mostrando <span className="text-[#00F3FF] font-bold">{filteredEvaluations.length}</span> de <span className="font-bold">{evaluations.length}</span> evaluaciones
+                    </span>
+                    <button
+                      onClick={() => { setFilterDateFrom(''); setFilterDateTo(''); setFilterCountry(''); setFilterTestId(''); }}
+                      className="text-[9px] text-white/50 hover:text-white uppercase tracking-widest"
+                    >
+                      Limpiar Filtros
+                    </button>
+                  </div>
+                </div>
+
 
                 <div className="grid md:grid-cols-4 gap-4">
                   <StatBox label="Evaluaciones Reales" value={evaluations.length} color="#00F3FF" />
@@ -395,17 +488,38 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                 </div>
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Tipo de Motor</label>
-                  <select
-                    value={editingTest.type}
-                    onChange={e => setEditingTest({ ...editingTest, type: e.target.value as any })}
-                    className="w-full border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF]"
-                    style={{ backgroundColor: '#1a1d28', color: 'white', colorScheme: 'dark' }}
-                  >
-                    <option value="mfc" style={{ backgroundColor: '#1a1d28', color: 'white' }}>MFC (Psicometría)</option>
-                    <option value="bart" style={{ backgroundColor: '#1a1d28', color: 'white' }}>BART (Riesgo)</option>
-                    <option value="gonogo" style={{ backgroundColor: '#1a1d28', color: 'white' }}>Go/No-Go (Impulso)</option>
-                    <option value="likert" style={{ backgroundColor: '#1a1d28', color: 'white' }}>Encuesta Likert</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+                      className="w-full bg-[#1a1d28] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF] text-left flex justify-between items-center"
+                    >
+                      <span className="text-white">
+                        {TEST_TYPE_OPTIONS.find(o => o.value === editingTest.type)?.label || 'Seleccionar...'}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isTypeDropdownOpen && (
+                      <div className="absolute z-50 mt-1 w-full bg-[#1a1d28] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+                        {TEST_TYPE_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setEditingTest({ ...editingTest, type: option.value as any });
+                              setIsTypeDropdownOpen(false);
+                            }}
+                            className={`w-full px-4 py-3 text-left flex justify-between items-center hover:bg-white/10 transition-colors ${editingTest.type === option.value ? 'bg-[#00F3FF]/10 text-[#00F3FF]' : 'text-white'
+                              }`}
+                          >
+                            <span>{option.label}</span>
+                            {editingTest.type === option.value && <Check className="w-4 h-4" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
 
 
                 </div>

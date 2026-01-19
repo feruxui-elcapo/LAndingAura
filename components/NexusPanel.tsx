@@ -55,6 +55,20 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
     e.preventDefault();
     if (!editingTest) return;
 
+    // Basic validation
+    if (!editingTest.title || editingTest.title.trim() === '') {
+      alert('El protocolo necesita un nombre público.');
+      return;
+    }
+    if (!editingTest.type) {
+      alert('Debes seleccionar un tipo de motor para el protocolo.');
+      return;
+    }
+    if (editingTest.type === 'likert' && !(editingTest.config && Array.isArray(editingTest.config.questions) && editingTest.config.questions.length > 0)) {
+      alert('Las encuestas Likert deben incluir al menos una pregunta.');
+      return;
+    }
+
     if (editingTest.id.startsWith('test_') && !catalog.find(t => t.id === editingTest.id)) {
       setCatalog([...catalog, editingTest]);
     } else {
@@ -139,7 +153,7 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                       <Download className="w-3 h-3" /> Exportar JSON/CSV
                     </button>
                     <button
-                      onClick={() => setEditingTest({ id: `test_${Date.now()}`, type: 'mfc', title: 'Nuevo Test', description: '', config: {}, color: '#00F3FF' })}
+                      onClick={() => setEditingTest({ id: `test_${Date.now()}`, type: 'mfc', title: 'Nuevo Test', description: '', config: { questions: [] }, norms: {}, color: '#00F3FF' })}
                       className="px-4 py-2 bg-[#00F3FF] text-[#080A0F] rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
                     >
                       <Plus className="w-3 h-3" /> Crear Protocolo
@@ -151,7 +165,7 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                   {catalog.map(test => (
                     <div key={test.id} className="bg-white/[0.02] border border-white/10 p-8 rounded-[32px] relative group hover:border-white/20 transition-all">
                       <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setEditingTest(test)} className="p-2 bg-white/5 rounded-lg hover:text-[#00F3FF] transition-colors"><Edit3 className="w-4 h-4" /></button>
+                        <button onClick={() => setEditingTest({ ...test, config: test.config || { questions: [] }, norms: test.norms || {} })} className="p-2 bg-white/5 rounded-lg hover:text-[#00F3FF] transition-colors"><Edit3 className="w-4 h-4" /></button>
                         <button onClick={() => handleDeleteTest(test.id)} className="p-2 bg-white/5 rounded-lg hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </div>
                       <div className="text-[9px] font-black uppercase tracking-widest mb-4" style={{ color: test.color }}>Motor {test.type.toUpperCase()}</div>
@@ -506,14 +520,23 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                             key={option.value}
                             type="button"
                             onClick={() => {
-                              setEditingTest({ ...editingTest, type: option.value as any });
+                              const base = { ...editingTest };
+                              if (option.value === 'likert') {
+                                base.config = base.config || { questions: [] };
+                                if (!Array.isArray(base.config.questions)) base.config.questions = [];
+                              }
+                              base.type = option.value as any;
+                              setEditingTest(base);
                               setIsTypeDropdownOpen(false);
                             }}
-                            className={`w-full px-4 py-3 text-left flex justify-between items-center hover:bg-white/10 transition-colors ${editingTest.type === option.value ? 'bg-[#00F3FF]/10 text-[#00F3FF]' : 'text-white'
-                              }`}
+                            className={`w-full px-4 py-3 text-left flex justify-between items-center hover:bg-white/10 transition-colors text-white`}
+                            style={{
+                              backgroundColor: editingTest.type === option.value ? 'rgba(0,243,255,0.08)' : undefined,
+                              color: editingTest.type === option.value ? '#00F3FF' : '#FFFFFF'
+                            }}
                           >
                             <span>{option.label}</span>
-                            {editingTest.type === option.value && <Check className="w-4 h-4" />}
+                            {editingTest.type === option.value && <Check className="w-4 h-4" style={{ color: '#00F3FF' }} />}
                           </button>
                         ))}
                       </div>

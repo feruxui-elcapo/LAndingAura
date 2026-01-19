@@ -8,6 +8,8 @@ import { StaticTest } from './engines/StaticTest';
 import { StroopTask } from './engines/StroopTask';
 import { BARTTask } from './engines/BARTTask';
 import { GoNoGoTask } from './engines/GoNoGoTask';
+import { LikertTask } from './engines/LikertTask';
+
 
 interface EvaluationEngineProps {
   testDef: TestDefinition;
@@ -28,11 +30,13 @@ export const EvaluationEngine: React.FC<EvaluationEngineProps> = ({ testDef, onC
         return <GoNoGoTask onFinish={(res, logs) => onComplete(res, logs)} config={testDef.config} />;
       case 'stroop':
         return <StroopTask onFinish={(res, logs) => onComplete(res, logs)} />;
-
+      case 'likert':
+        return <LikertTask onFinish={(res) => onComplete(res)} config={testDef.config} />;
       default:
         return <StaticTest onFinish={onComplete} config={testDef.config} />;
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#080A0F] text-white flex flex-col relative overflow-hidden">

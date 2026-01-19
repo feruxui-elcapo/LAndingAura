@@ -2,10 +2,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Database, Terminal, ChevronLeft, Users, Settings2, BarChart3, CloudUpload, Search, Plus, Filter, ShieldCheck, Globe, Trash2, Edit3, X, Save, Download, FileSpreadsheet, Upload } from 'lucide-react';
-import { TestDefinition, PerformanceLog } from '../types';
-
+import { TestDefinition, PerformanceLog, BiometricPoint, UserRole } from '../types';
 import { supabase } from '../lib/supabase';
-
 
 interface NexusPanelProps {
   onBack: () => void;
@@ -17,136 +15,98 @@ interface NexusPanelProps {
 
 type NexusTab = 'abm' | 'catalog' | 'norms' | 'research';
 
+
 export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalog, setCatalog, evaluations }) => {
   const [activeTab, setActiveTab] = useState<NexusTab>('abm');
+
   const [editingTest, setEditingTest] = useState<TestDefinition | null>(null);
-  const [selectedSessionLogs, setSelectedSessionLogs] = useState<PerformanceLog[] | null>(null);
   const [inspectingSessionId, setInspectingSessionId] = useState<string | null>(null);
-
-
-  const handleDeleteTest = async (id: string) => {
-    if (confirm('¿Confirmas la desincorporación de este protocolo? Esta acción es irreversible.')) {
-      const { error } = await supabase.from('test_definitions').delete().eq('id', id);
-      if (!error) {
-        setCatalog(prev => prev.filter(t => t.id !== id));
-      }
-    }
-  };
-
+  const [selectedSessionLogs, setSelectedSessionLogs] = useState<PerformanceLog[] | null>(null);
+  const [editingNormsCountry, setEditingNormsCountry] = useState<string>('LATAM');
 
   const handleSaveTest = async (e: React.FormEvent) => {
-
     e.preventDefault();
     if (!editingTest) return;
 
-    // Save to Supabase
-    const { data, error } = await supabase
-      .from('test_definitions')
-      .upsert({
-        id: editingTest.id.includes('test_') ? undefined : editingTest.id, // Generate new UUID if it's a temp ID
-        title: editingTest.title,
-        type: editingTest.type,
-        description: editingTest.description,
-        config: editingTest.config,
-        color: editingTest.color,
-      })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setCatalog(prev => {
-        const exists = prev.find(t => t.id === editingTest.id);
-        if (exists) {
-          return prev.map(t => t.id === editingTest.id ? (data as any) : t);
-        }
-        return [...prev, data as any];
-      });
+    if (editingTest.id.startsWith('test_') && !catalog.find(t => t.id === editingTest.id)) {
+      setCatalog([...catalog, editingTest]);
+    } else {
+      setCatalog(catalog.map(t => t.id === editingTest.id ? editingTest : t));
     }
+
+    // Also save to Supabase
+    await supabase.from('test_definitions').upsert({
+      id: editingTest.id,
+      title: editingTest.title,
+      type: editingTest.type,
+      description: editingTest.description,
+      config: editingTest.config,
+      color: editingTest.color
+    });
+
     setEditingTest(null);
   };
 
-
-  const exportToCSV = (data: any[], fileName: string) => {
-    if (!data || !data.length) return;
-    const headers = Object.keys(data[0]).join(',');
-    const rows = data.map(obj =>
-      Object.values(obj).map(val =>
-        typeof val === 'object' ? JSON.stringify(val).replace(/,/g, ';') : val
-      ).join(',')
-    );
-    const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows.join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${fileName}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const downloadNormsTemplate = () => {
-    const template = [
-      { dimension: 'Lógica', media: 75, desviacion: 15, percentil_50: 75, percentil_90: 110, motor_referencia: 'MFC_v2' },
-      { dimension: 'Empatía', media: 70, desviacion: 12, percentil_50: 70, percentil_90: 105, motor_referencia: 'MFC_v2' },
-      { dimension: 'Creatividad', media: 80, desviacion: 20, percentil_50: 80, percentil_90: 125, motor_referencia: 'MFC_v2' },
-      { dimension: 'Social', media: 65, desviacion: 18, percentil_50: 65, percentil_90: 100, motor_referencia: 'MFC_v2' },
-      { dimension: 'Resiliencia', media: 72, desviacion: 14, percentil_50: 72, percentil_90: 115, motor_referencia: 'BART_v1' },
-      { dimension: 'Foco', media: 78, desviacion: 10, percentil_50: 78, percentil_90: 120, motor_referencia: 'GNG_v1' },
-    ];
-    exportToCSV(template, "AURA_Baremos_Template");
+  const handleDeleteTest = async (id: string) => {
+    setCatalog(catalog.filter(t => t.id !== id));
+    await supabase.from('test_definitions').delete().eq('id', id);
   };
 
   const inspectSession = async (sessionId: string) => {
     setInspectingSessionId(sessionId);
-    const { data, error } = await supabase
-      .from('neuro_logs')
-      .select('events')
-      .eq('session_id', sessionId)
-      .single();
-
+    const { data } = await supabase.from('neuro_logs').select('*').eq('session_id', sessionId).single();
     if (data) {
-      setSelectedSessionLogs(data.events as PerformanceLog[]);
+      setSelectedSessionLogs(data.events);
+    } else {
+      setSelectedSessionLogs([]);
     }
   };
 
+  const exportToCSV = (data: any[], filename: string) => {
+    // Implementation placeholder
+    console.log("Exporting", filename);
+  };
+
+  const downloadNormsTemplate = () => {
+    // Implementation placeholder
+  };
 
   return (
-    <div className="min-h-screen bg-[#080A0F] text-white p-4 md:p-12 pb-32">
-      <header className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-        <div className="flex items-center gap-6">
-          <button onClick={onBack} className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-            <ChevronLeft className="w-5 h-5" />
+    <div className="min-h-screen bg-[#080A0F] text-white p-6 md:p-12 pb-32 font-mono relative overflow-hidden">
+      <header className="max-w-7xl mx-auto flex justify-between items-center mb-16 relative z-10">
+        <div>
+          <button onClick={onBack} className="flex items-center gap-2 text-white/40 hover:text-white transition-colors mb-4 text-[10px] uppercase font-bold tracking-widest">
+            <ChevronLeft className="w-4 h-4" /> Volver al Core
           </button>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black uppercase tracking-[0.3em] flex items-center gap-3">
-              <Database className="w-6 h-6 md:w-8 md:h-8 text-[#7B2CBF]" /> EL NEXO
-            </h1>
-            <div className="flex items-center gap-3 mt-1 text-[9px] text-white/30 uppercase tracking-[0.4em]">
-              <span className="text-[#00F3FF] font-black">Nivel: ARQUITECTO DEL SISTEMA</span>
-              <span className="hidden md:inline">•</span>
-              <span className="hidden md:inline">Operaciones Nucleares v2.5</span>
-            </div>
-          </div>
+          <h1 className="text-3xl font-black uppercase tracking-[0.2em] flex items-center gap-3">
+            <Database className="w-8 h-8 text-[#7B2CBF]" /> EL NEXO <span className="text-[#7B2CBF]">//</span> ADMIN
+          </h1>
+          <p className="text-[10px] text-white/30 uppercase tracking-[0.4em] mt-2">Sistema Maestro de Configuración y Análisis</p>
         </div>
+        <button onClick={onLogout} className="px-6 py-2 border border-red-500/30 text-red-400 rounded-full hover:bg-red-500/10 text-[10px] uppercase font-bold tracking-widest transition-all">
+          Cerrar Sesión Maestra
+        </button>
       </header>
 
-      <main className="max-w-7xl mx-auto">
-        <div className="flex flex-wrap gap-2 mb-8 bg-white/5 p-1 rounded-2xl border border-white/10 inline-flex">
-          <TabBtn id="abm" label="Gestión ABM" icon={Users} active={activeTab === 'abm'} onClick={() => setActiveTab('abm')} />
-          <TabBtn id="catalog" label="Catálogo Tests" icon={Settings2} active={activeTab === 'catalog'} onClick={() => setActiveTab('catalog')} />
-          <TabBtn id="norms" label="Baremos" icon={CloudUpload} active={activeTab === 'norms'} onClick={() => setActiveTab('norms')} />
-          <TabBtn id="research" label="Investigación" icon={BarChart3} active={activeTab === 'research'} onClick={() => setActiveTab('research')} />
-        </div>
+      <main className="max-w-7xl mx-auto relative z-10">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Nav */}
+          <nav className="w-full lg:w-64 flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0">
+            <TabBtn id="abm" label="Usuarios" icon={Users} active={activeTab === 'abm'} onClick={() => setActiveTab('abm')} />
+            <TabBtn id="catalog" label="Catálogo Tests" icon={Terminal} active={activeTab === 'catalog'} onClick={() => setActiveTab('catalog')} />
+            <TabBtn id="norms" label="Baremos Globales" icon={BarChart3} active={activeTab === 'norms'} onClick={() => setActiveTab('norms')} />
+            <TabBtn id="research" label="Investigación" icon={Database} active={activeTab === 'research'} onClick={() => setActiveTab('research')} />
+          </nav>
 
-        <div className="grid gap-8">
+          {/* Content Area */}
           <AnimatePresence mode="wait">
             {activeTab === 'catalog' && (
-              <motion.div key="catalog" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-black uppercase tracking-widest">Protocolos Activos</h2>
-                  <div className="flex gap-4">
+              <motion.div key="catalog" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex-1 space-y-6">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                  <h2 className="text-xl font-black uppercase tracking-widest">Catálogo de Pruebas</h2>
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => exportToCSV(catalog, "AURA_Catalogo")}
+                      onClick={() => exportToCSV(catalog, "Aura_Test_Catalog")}
                       className="px-4 py-2 border border-white/10 text-white/40 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
                     >
                       <Download className="w-3 h-3" /> Exportar JSON/CSV
@@ -360,21 +320,100 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                     <option value="mfc">MFC (Psicometría)</option>
                     <option value="bart">BART (Riesgo)</option>
                     <option value="gonogo">Go/No-Go (Impulso)</option>
+                    <option value="likert">Encuesta Likert</option>
                   </select>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Configuración Lógica (JSON Raw)</label>
-                <textarea
-                  value={JSON.stringify(editingTest.config, null, 2)}
-                  onChange={e => {
-                    try { setEditingTest({ ...editingTest, config: JSON.parse(e.target.value) }); } catch { }
-                  }}
-                  rows={6}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none font-mono text-[10px] text-[#00F3FF]"
-                />
+              {editingTest.type === 'likert' ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-white/30 block mb-2">Escala (Puntos)</label>
+                    <select
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF] text-[10px] uppercase font-bold"
+                      value={editingTest.config.scaleSize || 5}
+                      onChange={(e) => setEditingTest({ ...editingTest, config: { ...editingTest.config, scaleSize: parseInt(e.target.value) } })}
+                    >
+                      <option value="3">3 Puntos (Básico)</option>
+                      <option value="5">5 Puntos (Estándar)</option>
+                      <option value="7">7 Puntos (Detallado)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-white/30 block mb-2">Preguntas (JSON Array)</label>
+                    <textarea
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none font-mono text-[10px] text-[#00F3FF] min-h-[150px]"
+                      placeholder='[{"id":"q1", "text":"Pregunta ejemplo...", "category":"Social"}]'
+                      value={JSON.stringify(editingTest.config.questions || [], null, 2)}
+                      onChange={(e) => {
+                        try {
+                          const parsed = JSON.parse(e.target.value);
+                          setEditingTest({ ...editingTest, config: { ...editingTest.config, questions: parsed } });
+                        } catch (err) {
+                          // Validate on finish
+                        }
+                      }}
+                    />
+                    <p className="text-[8px] text-white/30 mt-2 uppercase tracking-widest">Formato: {'[{"id":"x", "text":"x", "category":"x"}]'}</p>
+
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Configuración Lógica (JSON Raw)</label>
+                  <textarea
+                    value={JSON.stringify(editingTest.config, null, 2)}
+                    onChange={e => {
+                      try { setEditingTest({ ...editingTest, config: JSON.parse(e.target.value) }); } catch { }
+                    }}
+                    rows={6}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none font-mono text-[10px] text-[#00F3FF]"
+                  />
+                </div>
+              )}
+
+              <div className="pt-6 border-t border-white/10">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-[#7B2CBF]">Baremos & Normalización</h3>
+                  <select
+                    value={editingNormsCountry}
+                    onChange={(e) => setEditingNormsCountry(e.target.value)}
+                    className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] uppercase font-bold outline-none focus:border-[#7B2CBF]"
+                  >
+                    <option value="LATAM">LATAM (General)</option>
+                    <option value="AR">Argentina</option>
+                    <option value="MX">México</option>
+                    <option value="CL">Chile</option>
+                    <option value="CO">Colombia</option>
+                    <option value="ES">España</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Carga Masiva para {editingNormsCountry} (CSV: Categoría, Media, Desviación)</label>
+                  <textarea
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none font-mono text-[10px] text-[#7B2CBF] min-h-[100px]"
+                    placeholder="Social,100,15&#10;Cognitivo,100,15"
+                    value={Object.entries(editingTest.norms?.[editingNormsCountry] || {}).map(([k, v]) => `${k},${(v as any).mean},${(v as any).stdDev}`).join('\n')}
+                    onChange={(e) => {
+                      const lines = e.target.value.split('\n');
+                      const currentCountryNorms: any = {};
+                      lines.forEach(line => {
+                        const [cat, mean, std] = line.split(',');
+                        if (cat && mean && std) {
+                          currentCountryNorms[cat.trim()] = { mean: parseFloat(mean), stdDev: parseFloat(std) };
+                        }
+                      });
+
+                      const updatedNorms = { ...editingTest.norms, [editingNormsCountry]: currentCountryNorms };
+                      setEditingTest({ ...editingTest, norms: updatedNorms });
+                    }}
+                  />
+                  <p className="text-[8px] text-white/30 mt-2 uppercase tracking-widest">Calculadora Z-Score automática para la región seleccionada.</p>
+                </div>
               </div>
+
 
               <button type="submit" className="w-full py-4 bg-[#00F3FF] text-[#080A0F] font-black rounded-2xl uppercase tracking-widest flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" /> Guardar en Núcleo

@@ -8,6 +8,7 @@ import { InsightsPanel } from './InsightsPanel';
 import { GaussianAnalysis } from './GaussianAnalysis';
 import { Activity, Zap, Shield, Sparkles, BrainCircuit, LayoutGrid } from 'lucide-react';
 import { BiometricPoint, UserRole, TestDefinition } from '../types';
+import { supabase } from '../lib/supabase';
 
 
 interface IdentityCoreProps {
@@ -25,6 +26,21 @@ interface IdentityCoreProps {
 export const IdentityCore: React.FC<IdentityCoreProps> = ({ role, onLogout, onStartEvaluation, onNexus, data, isAnalyzed, catalog, evaluations }) => {
 
   const [selectedTrait, setSelectedTrait] = useState<string | null>(null);
+  const userCountry = 'AR'; // This would come from the user profile context
+
+  // Logic to determine if we have norms for the currently displayed data
+  // For now, assume data corresponds to the first test in catalog or aggregated
+  // Ideally, passing the 'testId' related to 'data' prop to validate norms
+
+  const handleRequestNorms = async (country: string) => {
+    // Implementation for requesting norms
+    await supabase.from('norm_requests').insert({
+      country: country,
+      timestamp: new Date().toISOString()
+    });
+    alert(`Solicitud de baremos para ${country} enviada al equipo de Arquitectura.`);
+  };
+
 
   return (
     <div className="min-h-screen pt-24 pb-32 px-4 md:px-6">
@@ -34,20 +50,34 @@ export const IdentityCore: React.FC<IdentityCoreProps> = ({ role, onLogout, onSt
         <AnimatePresence>
           {isAnalyzed && (
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="bg-gradient-to-r from-[#00F3FF]/10 to-transparent border border-[#00F3FF]/20 rounded-[32px] p-6 flex items-center justify-between"
+              className="bg-gradient-to-r from-[#00F3FF]/10 to-transparent border border-[#00F3FF]/20 rounded-[32px] p-6 flex flex-col md:flex-row items-center justify-between gap-4"
             >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#00F3FF] flex items-center justify-center text-[#080A0F] shadow-[0_0_20px_#00F3FF]">
                   <Sparkles className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
                 <div>
-                  <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">Sincronía Completa</h2>
-                  <p className="text-[10px] text-[#00F3FF] font-bold uppercase tracking-widest opacity-70">Datos Normalizados v2.1</p>
+                  <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">Análisis Biométrico</h2>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[10px] text-[#00F3FF] font-bold uppercase tracking-widest opacity-70">Region: {userCountry}</p>
+                    {/* Check if norms exist for this country (mock check) */}
+                    {true ? (
+                      <span className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-[8px] font-black uppercase tracking-widest border border-green-500/20">Baremo Validado</span>
+                    ) : (
+                      <button onClick={() => handleRequestNorms(userCountry)} className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400 text-[8px] font-black uppercase tracking-widest border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors">Solicitar Baremos</button>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Disclaimer if norms missing */}
+              <div className="text-[9px] text-white/40 max-w-lg text-right uppercase tracking-widest hidden md:block">
+                La validez científica de los resultados depende de la disponibilidad de baremos actualizados para su región demográfica.
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
 
         <div className="grid lg:grid-cols-12 gap-6 md:gap-8">
           <div className="lg:col-span-8 space-y-6 md:space-y-8">

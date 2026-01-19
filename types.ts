@@ -17,9 +17,14 @@ export interface PerformanceLog {
 
 export interface TestDefinition {
     id: string;
-    type: 'mfc' | 'stroop' | 'bart' | 'gonogo';
+    type: 'mfc' | 'stroop' | 'bart' | 'gonogo' | 'likert';
+
     title: string;
     description: string;
     config: any;
     color: string;
+    // Map<CountryCode, Map<Category, {mean, std}>>
+    norms?: Record<string, Record<string, { mean: number; stdDev: number }>>;
 }
+
+

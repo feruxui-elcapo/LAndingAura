@@ -22,7 +22,12 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
   const [editingTest, setEditingTest] = useState<TestDefinition | null>(null);
   const [inspectingSessionId, setInspectingSessionId] = useState<string | null>(null);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState<PerformanceLog[] | null>(null);
+
   const [editingNormsCountry, setEditingNormsCountry] = useState<string>('LATAM');
+  const [selectedNormTestId, setSelectedNormTestId] = useState<string>('');
+
+  const [newQuestionText, setNewQuestionText] = useState('');
+  const [newQuestionCategory, setNewQuestionCategory] = useState('');
 
   const handleSaveTest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,52 +147,130 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                   <div className="max-w-xl">
                     <h2 className="text-2xl font-black uppercase tracking-tighter mb-4">Gestión de Normalización</h2>
                     <p className="text-sm text-white/40 leading-relaxed uppercase tracking-widest">
-                      Descarga el archivo de baremos para calibrar la precisión estadística del sistema.
-                      Aura utiliza estos parámetros para el cálculo de percentiles y desviaciones estándar.
+                      Selecciona un protocolo y una región para calibrar los baremos estadísticos.
                     </p>
                   </div>
-                  <div className="flex flex-col gap-3 w-full md:w-auto">
-                    <button
-                      onClick={downloadNormsTemplate}
-                      className="px-8 py-4 bg-white text-[#080A0F] font-black rounded-2xl uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-105 transition-all shadow-xl shadow-white/5"
-                    >
-                      <FileSpreadsheet className="w-5 h-5" /> Bajar Baremos (.CSV)
-                    </button>
-                    <button className="px-8 py-4 border border-white/10 bg-white/5 text-white/60 font-black rounded-2xl uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-white/10 transition-all">
-                      <Upload className="w-5 h-5" /> Cargar Actualización
-                    </button>
+                  <div className="flex bg-white/5 border border-white/10 rounded-2xl p-4 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-[#00F3FF]">Protocolo Objetivo</label>
+                      <select
+                        value={selectedNormTestId}
+                        onChange={(e) => setSelectedNormTestId(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:border-[#00F3FF] outline-none uppercase font-bold"
+                      >
+                        <option value="">-- Seleccionar Test --</option>
+                        {catalog.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-[#7B2CBF]">Región Demográfica</label>
+                      <select
+                        value={editingNormsCountry}
+                        onChange={(e) => setEditingNormsCountry(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:border-[#7B2CBF] outline-none uppercase font-bold"
+                      >
+                        <option value="LATAM">LATAM (General)</option>
+                        <option value="AR">Argentina</option>
+                        <option value="MX">México</option>
+                        <option value="CL">Chile</option>
+                        <option value="CO">Colombia</option>
+                        <option value="ES">España</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[40px] space-y-4">
-                    <div className="flex items-center gap-2 text-[#00F3FF]">
-                      <ShieldCheck className="w-4 h-4" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Validación de Esquema</span>
+                {selectedNormTestId ? (
+                  <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[40px] space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-bold flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-[#00F3FF]" />
+                        Editor de Baremos: {catalog.find(t => t.id === selectedNormTestId)?.title} ({editingNormsCountry})
+                      </h3>
+                      <button
+                        onClick={async () => {
+                          // Save trigger via Supabase update
+                          const testToUpdate = catalog.find(t => t.id === selectedNormTestId);
+                          if (testToUpdate) {
+                            await supabase.from('test_definitions').upsert({
+                              id: testToUpdate.id,
+                              title: testToUpdate.title,
+                              type: testToUpdate.type,
+                              description: testToUpdate.description,
+                              config: testToUpdate.config,
+                              color: testToUpdate.color,
+                              norms: testToUpdate.norms
+                            });
+                            alert("Baremos actualizados y guardados en el núcleo.");
+                          }
+                        }}
+                        className="px-4 py-2 bg-[#00F3FF]/20 text-[#00F3FF] border border-[#00F3FF]/30 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#00F3FF] hover:text-[#080A0F] transition-all"
+                      >
+                        Confirmar Cambios
+                      </button>
                     </div>
-                    <h3 className="text-lg font-bold">Estado del Motor de Normalización</h3>
-                    <div className="flex items-center justify-between py-3 border-b border-white/5">
-                      <span className="text-[10px] text-white/30 uppercase font-bold">Base Normativa</span>
-                      <span className="text-[10px] text-[#00F3FF] font-mono">LATAM_GENERAL_N1500</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3 border-b border-white/5">
-                      <span className="text-[10px] text-white/30 uppercase font-bold">Última Sincro</span>
-                      <span className="text-[10px] font-mono text-white/60">24/02/2025</span>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Datos CSV (Categoría, Media, Desviación)</label>
+                        <textarea
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none font-mono text-[10px] text-[#7B2CBF] min-h-[300px]"
+                          placeholder="Social,100,15&#10;Cognitivo,100,15"
+                          value={(() => {
+                            const test = catalog.find(t => t.id === selectedNormTestId);
+                            if (!test) return '';
+                            const norms = test.norms?.[editingNormsCountry] || {};
+                            return Object.entries(norms).map(([k, v]) => `${k},${(v as any).mean},${(v as any).stdDev}`).join('\n');
+                          })()}
+                          onChange={(e) => {
+                            const testIndex = catalog.findIndex(t => t.id === selectedNormTestId);
+                            if (testIndex === -1) return;
+
+                            const lines = e.target.value.split('\n');
+                            const currentCountryNorms: any = {};
+                            lines.forEach(line => {
+                              const [cat, mean, std] = line.split(',');
+                              if (cat && mean && std) {
+                                currentCountryNorms[cat.trim()] = { mean: parseFloat(mean), stdDev: parseFloat(std) };
+                              }
+                            });
+
+                            const updatedCatalog = [...catalog];
+                            const test = updatedCatalog[testIndex];
+                            test.norms = { ...test.norms, [editingNormsCountry]: currentCountryNorms };
+                            setCatalog(updatedCatalog);
+                          }}
+                        />
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/5">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-4">Vista Previa de Validación</h4>
+                          <div className="space-y-2">
+                            {(() => {
+                              const test = catalog.find(t => t.id === selectedNormTestId);
+                              if (!test || !test.norms?.[editingNormsCountry]) return <div className="text-white/20 text-[10px] italic">Sin datos cargados...</div>;
+                              return Object.entries(test.norms[editingNormsCountry]).map(([k, v]: any) => (
+                                <div key={k} className="flex justify-between items-center py-2 border-b border-white/5">
+                                  <span className="text-[10px] font-bold text-white">{k}</span>
+                                  <span className="text-[9px] font-mono text-[#00F3FF]">µ={v.mean} σ={v.stdDev}</span>
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[40px] space-y-4">
-                    <div className="flex items-center gap-2 text-[#7B2CBF]">
-                      <Globe className="w-4 h-4" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Referencia Global</span>
-                    </div>
-                    <h3 className="text-lg font-bold">Distribución Gaussiana Aplicada</h3>
-                    <p className="text-[10px] text-white/30 leading-relaxed uppercase tracking-widest">
-                      El sistema mapea los resultados brutos (Raw Scores) a un rango de 0-150 utilizando una media tipificada de 100 y una desviación estándar de 15.
-                    </p>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-white/5 rounded-[40px]">
+                    <BarChart3 className="w-12 h-12 text-white/10 mb-4" />
+                    <p className="text-[10px] uppercase tracking-widest text-white/30">Selecciona un protocolo arriba para comenzar la edición.</p>
                   </div>
-                </div>
+                )}
               </motion.div>
             )}
+
 
             {activeTab === 'research' && (
               <motion.div key="research" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
@@ -327,38 +410,76 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
 
               {editingTest.type === 'likert' ? (
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-white/30 block mb-2">Escala (Puntos)</label>
-                    <select
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF] text-[10px] uppercase font-bold"
-                      value={editingTest.config.scaleSize || 5}
-                      onChange={(e) => setEditingTest({ ...editingTest, config: { ...editingTest.config, scaleSize: parseInt(e.target.value) } })}
-                    >
-                      <option value="3">3 Puntos (Básico)</option>
-                      <option value="5">5 Puntos (Estándar)</option>
-                      <option value="7">7 Puntos (Detallado)</option>
-                    </select>
+                  <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-[#00F3FF] block mb-3">Agregar Nueva Pregunta</label>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        value={newQuestionText}
+                        onChange={e => setNewQuestionText(e.target.value)}
+                        className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:border-[#00F3FF] outline-none"
+                        placeholder="Texto de la pregunta..."
+                      />
+                      <input
+                        value={newQuestionCategory}
+                        onChange={e => setNewQuestionCategory(e.target.value)}
+                        className="w-24 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:border-[#00F3FF] outline-none"
+                        placeholder="Categoría"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!newQuestionText || !newQuestionCategory) return;
+                          const currentQuestions = editingTest.config.questions || [];
+                          const newQ = {
+                            id: `q${currentQuestions.length + 1}`,
+                            text: newQuestionText,
+                            category: newQuestionCategory
+                          };
+                          setEditingTest({
+                            ...editingTest,
+                            config: { ...editingTest.config, questions: [...currentQuestions, newQ] }
+                          });
+                          setNewQuestionText('');
+                        }}
+                        className="px-3 bg-[#00F3FF]/20 text-[#00F3FF] rounded-lg hover:bg-[#00F3FF] hover:text-[#080A0F] transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-white/30 block mb-2">Preguntas (JSON Array)</label>
-                    <textarea
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none font-mono text-[10px] text-[#00F3FF] min-h-[150px]"
-                      placeholder='[{"id":"q1", "text":"Pregunta ejemplo...", "category":"Social"}]'
-                      value={JSON.stringify(editingTest.config.questions || [], null, 2)}
-                      onChange={(e) => {
-                        try {
-                          const parsed = JSON.parse(e.target.value);
-                          setEditingTest({ ...editingTest, config: { ...editingTest.config, questions: parsed } });
-                        } catch (err) {
-                          // Validate on finish
-                        }
-                      }}
-                    />
-                    <p className="text-[8px] text-white/30 mt-2 uppercase tracking-widest">Formato: {'[{"id":"x", "text":"x", "category":"x"}]'}</p>
-
+                    <label className="text-[9px] font-black uppercase tracking-widest text-white/30 block mb-2">
+                      Preguntas Configuradas ({editingTest.config.questions?.length || 0})
+                    </label>
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                      {editingTest.config.questions?.map((q: any, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                          <div>
+                            <div className="text-[10px] text-white font-bold">{q.text}</div>
+                            <div className="text-[8px] text-[#00F3FF] uppercase tracking-widest">{q.category}</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = editingTest.config.questions.filter((_: any, i: number) => i !== idx);
+                              setEditingTest({ ...editingTest, config: { ...editingTest.config, questions: updated } });
+                            }}
+                            className="text-white/20 hover:text-red-500"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {(!editingTest.config.questions || editingTest.config.questions.length === 0) && (
+                        <div className="text-center py-4 text-[10px] text-white/20 italic border border-dashed border-white/10 rounded-xl">
+                          No hay preguntas definidas todavía.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+
               ) : (
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Configuración Lógica (JSON Raw)</label>

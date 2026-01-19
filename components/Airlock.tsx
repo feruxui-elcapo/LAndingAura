@@ -13,6 +13,13 @@ interface AirlockProps {
 
 
 export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
+  // Temporary force flag: set to `true` to enable Architect locally for testing.
+  // You can change this to false or remove after finishing local tests.
+  const FORCE_ENABLE_ARCHITECT = true;
+
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+  const envForce = import.meta.env.VITE_FORCE_ENABLE_ARCHITECT === '1';
+  const isSupabaseConfigured = (SUPABASE_URL && !SUPABASE_URL.includes('your-project') && !SUPABASE_URL.includes('placeholder')) || envForce || FORCE_ENABLE_ARCHITECT;
   const handleGoogleLogin = async (role: UserRole) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -33,6 +40,18 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
   };
 
   const handleProtocolClick = async (role: UserRole) => {
+    // If architect and FORCE is enabled, bypass OAuth and simulate login locally
+    const envForce = import.meta.env.VITE_FORCE_ENABLE_ARCHITECT === '1';
+    const FORCE_ENABLE_ARCHITECT = true;
+    const allowBypass = FORCE_ENABLE_ARCHITECT || envForce;
+
+    if (role === 'architect' && allowBypass) {
+      // Simulate successful authentication for local testing
+      console.warn('Bypassing OAuth for architect (local test mode)');
+      onSuccess(role);
+      return;
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
 
     if (session) {
@@ -97,6 +116,7 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
             color="#7B2CBF"
             desc="Control de nexo, baremos y algoritmos."
             onClick={() => handleProtocolClick('architect')}
+            disabled={!isSupabaseConfigured}
           />
 
         </div>
@@ -105,19 +125,19 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
   );
 };
 
-const ProtocolCard = ({ title, icon: Icon, color, desc, onClick }: any) => (
+  const ProtocolCard = ({ title, icon: Icon, color, desc, onClick, disabled = false }: any) => (
   <motion.div
-    whileHover={{ y: -5 }}
-    onClick={onClick}
-    className="bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[32px] p-8 flex flex-col items-center text-center group cursor-pointer hover:border-white/20 transition-all"
+      whileHover={{ y: disabled ? 0 : -5 }}
+      onClick={disabled ? undefined : onClick}
+      className={`bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[32px] p-8 flex flex-col items-center text-center group transition-all ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-white/20'}`}
   >
     <div className="w-16 h-16 rounded-2xl mb-6 flex items-center justify-center transition-all group-hover:scale-110" style={{ backgroundColor: `${color}10`, color }}>
       <Icon className="w-8 h-8" />
     </div>
     <h2 className="text-xl font-black uppercase tracking-widest mb-3">{title}</h2>
     <p className="text-[10px] text-white/20 leading-relaxed uppercase tracking-wider mb-8">{desc}</p>
-    <button className="w-full py-3 rounded-xl border border-white/10 text-[9px] font-black uppercase tracking-widest group-hover:bg-white group-hover:text-[#080A0F] transition-all">
-      Iniciar Vínculo
-    </button>
+      <button disabled={disabled} className={`w-full py-3 rounded-xl border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all ${disabled ? 'bg-white/5 text-white/30' : 'group-hover:bg-white group-hover:text-[#080A0F]'}`}>
+        {disabled ? 'Configuración necesaria' : 'Iniciar Vínculo'}
+      </button>
   </motion.div>
 );

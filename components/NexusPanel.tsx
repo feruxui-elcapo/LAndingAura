@@ -398,13 +398,15 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                   <select
                     value={editingTest.type}
                     onChange={e => setEditingTest({ ...editingTest, type: e.target.value as any })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF]"
+                    className="w-full bg-[#1a1d28] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF] text-white"
+                    style={{ colorScheme: 'dark' }}
                   >
-                    <option value="mfc">MFC (Psicometría)</option>
-                    <option value="bart">BART (Riesgo)</option>
-                    <option value="gonogo">Go/No-Go (Impulso)</option>
-                    <option value="likert">Encuesta Likert</option>
+                    <option value="mfc" className="bg-[#1a1d28] text-white">MFC (Psicometría)</option>
+                    <option value="bart" className="bg-[#1a1d28] text-white">BART (Riesgo)</option>
+                    <option value="gonogo" className="bg-[#1a1d28] text-white">Go/No-Go (Impulso)</option>
+                    <option value="likert" className="bg-[#1a1d28] text-white">Encuesta Likert</option>
                   </select>
+
                 </div>
               </div>
 

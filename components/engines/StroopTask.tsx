@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { BiometricPoint, PerformanceLog } from '../../App';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BiometricPoint } from '../../App';
 
 const COLORS = [
   { name: 'ROJO', hex: '#FF4136', label: 'Red' },
@@ -11,14 +11,13 @@ const COLORS = [
 ];
 
 interface StroopTaskProps {
-  onFinish: (results: BiometricPoint[], logs: PerformanceLog[]) => void;
+  onFinish: (results: BiometricPoint[]) => void;
 }
 
 export const StroopTask: React.FC<StroopTaskProps> = ({ onFinish }) => {
   const [trial, setTrial] = useState(0);
   const [currentStroop, setCurrentStroop] = useState({ text: '', color: '', isCongruent: false });
   const [latencies, setLatencies] = useState<number[]>([]);
-  const [logs, setLogs] = useState<PerformanceLog[]>([]);
   const [startTime, setStartTime] = useState(0);
   const totalTrials = 12;
 
@@ -26,41 +25,29 @@ export const StroopTask: React.FC<StroopTaskProps> = ({ onFinish }) => {
     generateTrial();
   }, []);
 
-  const addLog = (event: string, details?: any) => {
-    setLogs(prev => [...prev, { timestamp: window.performance.now(), event, details }]);
-  };
-
   const generateTrial = () => {
     const textIdx = Math.floor(Math.random() * COLORS.length);
     const colorIdx = Math.random() > 0.5 ? textIdx : Math.floor(Math.random() * COLORS.length);
-
-    const nextStroop = {
+    
+    setCurrentStroop({
       text: COLORS[textIdx].name,
       color: COLORS[colorIdx].hex,
       isCongruent: textIdx === colorIdx
-    };
-
-    setCurrentStroop(nextStroop);
-    const now = window.performance.now();
-    setStartTime(now);
-    addLog('stimulus_shown', { ...nextStroop, trial });
+    });
+    setStartTime(window.performance.now());
   };
 
   const handleResponse = (hexCode: string) => {
     const endTime = window.performance.now();
     const rt = endTime - startTime;
-    const isCorrect = hexCode === currentStroop.color;
-
-    addLog('response', { hexCode, isCorrect, rt, trial });
-
-    if (isCorrect) {
-      const newLatencies = [...latencies, rt];
-      setLatencies(newLatencies);
+    
+    if (hexCode === currentStroop.color) {
+      setLatencies([...latencies, rt]);
       if (trial < totalTrials - 1) {
         setTrial(trial + 1);
         generateTrial();
       } else {
-        finishTest(newLatencies);
+        finishTest([...latencies, rt]);
       }
     } else {
       // Error feedback (Glitch visual)
@@ -83,7 +70,7 @@ export const StroopTask: React.FC<StroopTaskProps> = ({ onFinish }) => {
       { subject: 'Resiliencia', A: 95, fullMark: 150 },
       { subject: 'Foco', A: score, fullMark: 150 },
     ];
-    onFinish(results, logs);
+    onFinish(results);
   };
 
   return (
@@ -95,7 +82,7 @@ export const StroopTask: React.FC<StroopTaskProps> = ({ onFinish }) => {
         </div>
 
         <div className="h-40 flex items-center justify-center">
-          <motion.h1
+          <motion.h1 
             key={trial}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}

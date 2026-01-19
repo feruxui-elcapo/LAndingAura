@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BiometricPoint, PerformanceLog } from '../../App';
+import { BiometricPoint } from '../../App';
 
+// Added config to GoNoGoTaskProps to fix type error in EvaluationEngine
 interface GoNoGoTaskProps {
-  onFinish: (results: BiometricPoint[], logs: PerformanceLog[]) => void;
+  onFinish: (results: BiometricPoint[]) => void;
   config: any;
 }
 
+// Added config to component props
 export const GoNoGoTask: React.FC<GoNoGoTaskProps> = ({ onFinish, config }) => {
   const [gameState, setGameState] = useState<'waiting' | 'stimulus'>('waiting');
   const [trial, setTrial] = useState(0);
@@ -15,25 +17,19 @@ export const GoNoGoTask: React.FC<GoNoGoTaskProps> = ({ onFinish, config }) => {
   const [startTime, setStartTime] = useState(0);
   const [rts, setRts] = useState<number[]>([]);
   const [errors, setErrors] = useState(0);
-  const [logs, setLogs] = useState<PerformanceLog[]>([]);
 
+  // Use values from config with fallbacks
   const totalTrials = config?.totalTrials || 15;
   const goProbability = config?.goProbability || 0.75;
-
-  const addLog = (event: string, details?: any) => {
-    setLogs(prev => [...prev, { timestamp: window.performance.now(), event, details }]);
-  };
 
   useEffect(() => {
     if (trial < totalTrials) {
       const delay = 1000 + Math.random() * 2000;
       const timer = setTimeout(() => {
-        const nextIsGo = Math.random() < goProbability;
-        setIsGo(nextIsGo);
+        // Use goProbability from config
+        setIsGo(Math.random() < goProbability); 
         setGameState('stimulus');
-        const now = window.performance.now();
-        setStartTime(now);
-        addLog('stimulus_shown', { isGo: nextIsGo, trial });
+        setStartTime(window.performance.now());
       }, delay);
       return () => clearTimeout(timer);
     } else {
@@ -47,7 +43,6 @@ export const GoNoGoTask: React.FC<GoNoGoTaskProps> = ({ onFinish, config }) => {
         if (isGo) {
           // Error por omisión
           setErrors(e => e + 1);
-          addLog('error_omission', { trial });
         }
         nextTrial();
       }, 1000);
@@ -57,7 +52,7 @@ export const GoNoGoTask: React.FC<GoNoGoTaskProps> = ({ onFinish, config }) => {
 
   const handleInteraction = () => {
     if (gameState !== 'stimulus') {
-      addLog('error_anticipation', { trial });
+      // Click anticipado (Fase 4.1 Log)
       setErrors(e => e + 1);
       return;
     }
@@ -65,11 +60,9 @@ export const GoNoGoTask: React.FC<GoNoGoTaskProps> = ({ onFinish, config }) => {
     const rt = window.performance.now() - startTime;
     if (isGo) {
       setRts(prev => [...prev, rt]);
-      addLog('response', { rt, isCorrect: true, trial });
     } else {
       // Error No-Go (Impulsividad motora detectada)
       setErrors(e => e + 1);
-      addLog('error_commission', { rt, trial });
     }
     nextTrial();
   };
@@ -92,11 +85,11 @@ export const GoNoGoTask: React.FC<GoNoGoTaskProps> = ({ onFinish, config }) => {
       { subject: 'Resiliencia', A: 95, fullMark: 150 },
       { subject: 'Foco', A: focusScore, fullMark: 150 },
     ];
-    onFinish(results, logs);
+    onFinish(results);
   };
 
   return (
-    <div
+    <div 
       className="w-full h-full flex flex-col items-center justify-center space-y-12 cursor-pointer"
       onClick={handleInteraction}
     >
@@ -108,7 +101,7 @@ export const GoNoGoTask: React.FC<GoNoGoTaskProps> = ({ onFinish, config }) => {
       <div className="relative w-80 h-80 flex items-center justify-center">
         <AnimatePresence mode="wait">
           {gameState === 'stimulus' ? (
-            <motion.div
+            <motion.div 
               key="target"
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -116,7 +109,7 @@ export const GoNoGoTask: React.FC<GoNoGoTaskProps> = ({ onFinish, config }) => {
               className={`w-64 h-64 rounded-full blur-xl ${isGo ? 'bg-[#00F3FF] shadow-[0_0_100px_#00F3FF]' : 'bg-[#7B2CBF] shadow-[0_0_100px_#7B2CBF]'}`}
             />
           ) : (
-            <motion.div
+            <motion.div 
               key="waiting"
               className="w-4 h-4 rounded-full bg-white/20 animate-pulse"
             />

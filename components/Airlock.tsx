@@ -3,52 +3,17 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { User, Command, ChevronLeft, HeartPulse, Building2 } from 'lucide-react';
 import { UserRole } from '../App';
-import { supabase } from '../lib/supabase';
-
 
 interface AirlockProps {
   onBack: () => void;
   onSuccess: (role: UserRole) => void;
 }
 
-
 export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
-  const handleGoogleLogin = async (role: UserRole) => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      },
-    });
-
-    if (error) {
-      console.error('Auth error:', error.message);
-      // Fallback for demo if no config
-      onSuccess(role);
-    }
-  };
-
-  const handleProtocolClick = async (role: UserRole) => {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (session) {
-      // If already logged in, just proceed with the role
-      onSuccess(role);
-    } else {
-      // Trigger Google Login
-      await handleGoogleLogin(role);
-    }
-  };
-
   return (
-
     <div className="min-h-screen flex items-center justify-center px-6 py-20 relative bg-[#080A0F]">
       <div className="absolute top-10 left-10">
-        <button
+        <button 
           onClick={onBack}
           className="flex items-center gap-2 text-white/30 hover:text-[#00F3FF] transition-colors text-xs font-bold uppercase tracking-widest"
         >
@@ -63,42 +28,38 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <ProtocolCard
-            id="explorer"
-            title="Explorer"
-            icon={User}
-            color="#00F3FF"
+          <ProtocolCard 
+            id="explorer" 
+            title="Explorer" 
+            icon={User} 
+            color="#00F3FF" 
             desc="Sujeto de prueba. Autoconocimiento personal."
-            onClick={() => handleProtocolClick('explorer')}
+            onClick={() => onSuccess('explorer')} 
           />
-
-          <ProtocolCard
-            id="professional"
-            title="Professional"
-            icon={HeartPulse}
-            color="#00F3FF"
+          <ProtocolCard 
+            id="professional" 
+            title="Professional" 
+            icon={HeartPulse} 
+            color="#00F3FF" 
             desc="Gestión de pacientes y baterías clínicas."
-            onClick={() => handleProtocolClick('professional')}
+            onClick={() => onSuccess('professional')} 
           />
-
-          <ProtocolCard
-            id="corporate"
-            title="Corporate"
-            icon={Building2}
-            color="#FF9FFC"
+          <ProtocolCard 
+            id="corporate" 
+            title="Corporate" 
+            icon={Building2} 
+            color="#FF9FFC" 
             desc="Analítica de equipos y gestión de talento."
-            onClick={() => handleProtocolClick('corporate')}
+            onClick={() => onSuccess('corporate')} 
           />
-
-          <ProtocolCard
-            id="architect"
-            title="Architect"
-            icon={Command}
-            color="#7B2CBF"
+          <ProtocolCard 
+            id="architect" 
+            title="Architect" 
+            icon={Command} 
+            color="#7B2CBF" 
             desc="Control de nexo, baremos y algoritmos."
-            onClick={() => handleProtocolClick('architect')}
+            onClick={() => onSuccess('architect')} 
           />
-
         </div>
       </div>
     </div>
@@ -106,7 +67,7 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
 };
 
 const ProtocolCard = ({ title, icon: Icon, color, desc, onClick }: any) => (
-  <motion.div
+  <motion.div 
     whileHover={{ y: -5 }}
     onClick={onClick}
     className="bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[32px] p-8 flex flex-col items-center text-center group cursor-pointer hover:border-white/20 transition-all"

@@ -1,16 +1,15 @@
 
 import React from 'react';
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
+import { 
+  Radar, 
+  RadarChart, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  PolarRadiusAxis, 
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { BiometricPoint } from '../types';
-
+import { BiometricPoint } from '../App';
 
 interface IdentityRadarProps {
   data: BiometricPoint[];
@@ -22,12 +21,12 @@ export const IdentityRadar: React.FC<IdentityRadarProps> = ({ data }) => {
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
           <PolarGrid stroke="rgba(255,255,255,0.05)" />
-          <PolarAngleAxis
-            dataKey="subject"
-            tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 'bold', letterSpacing: '0.1em' }}
+          <PolarAngleAxis 
+              dataKey="subject" 
+              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 'bold', letterSpacing: '0.1em' }} 
           />
           <PolarRadiusAxis angle={30} domain={[0, 150]} tick={false} axisLine={false} />
-
+          
           <Radar
             name="Baremo Ideal"
             dataKey="ideal"
@@ -47,18 +46,18 @@ export const IdentityRadar: React.FC<IdentityRadarProps> = ({ data }) => {
             fillOpacity={0.15}
             animationDuration={2000}
           />
-
-          <Legend
-            verticalAlign="bottom"
+          
+          <Legend 
+            verticalAlign="bottom" 
             align="center"
-            wrapperStyle={{
-              paddingTop: '30px',
-              fontSize: '8px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.3em',
+            wrapperStyle={{ 
+              paddingTop: '30px', 
+              fontSize: '8px', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.3em', 
               fontWeight: '900',
               opacity: 0.4
-            }}
+            }} 
           />
         </RadarChart>
       </ResponsiveContainer>

@@ -5,12 +5,10 @@ import { User, Command, ChevronLeft, HeartPulse, Building2 } from 'lucide-react'
 import { UserRole } from '../App';
 import { supabase } from '../lib/supabase';
 
-
 interface AirlockProps {
   onBack: () => void;
   onSuccess: (role: UserRole) => void;
 }
-
 
 export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
   // Temporary force flag: set to `true` to enable Architect locally for testing.
@@ -20,6 +18,7 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
   const envForce = import.meta.env.VITE_FORCE_ENABLE_ARCHITECT === '1';
   const isSupabaseConfigured = (SUPABASE_URL && !SUPABASE_URL.includes('your-project') && !SUPABASE_URL.includes('placeholder')) || envForce || FORCE_ENABLE_ARCHITECT;
+
   const handleGoogleLogin = async (role: UserRole) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -64,7 +63,6 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
   };
 
   return (
-
     <div className="min-h-screen flex items-center justify-center px-6 py-20 relative bg-[#080A0F]">
       <div className="absolute top-10 left-10">
         <button
@@ -88,27 +86,24 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
             icon={User}
             color="#00F3FF"
             desc="Sujeto de prueba. Autoconocimiento personal."
-            onClick={() => handleProtocolClick('explorer')}
+            onClick={() => onSuccess('explorer')}
           />
-
           <ProtocolCard
             id="professional"
             title="Professional"
             icon={HeartPulse}
             color="#00F3FF"
             desc="Gestión de pacientes y baterías clínicas."
-            onClick={() => handleProtocolClick('professional')}
+            onClick={() => onSuccess('professional')}
           />
-
           <ProtocolCard
             id="corporate"
             title="Corporate"
             icon={Building2}
             color="#FF9FFC"
             desc="Analítica de equipos y gestión de talento."
-            onClick={() => handleProtocolClick('corporate')}
+            onClick={() => onSuccess('corporate')}
           />
-
           <ProtocolCard
             id="architect"
             title="Architect"
@@ -118,26 +113,25 @@ export const Airlock: React.FC<AirlockProps> = ({ onBack, onSuccess }) => {
             onClick={() => handleProtocolClick('architect')}
             disabled={!isSupabaseConfigured}
           />
-
         </div>
       </div>
     </div>
   );
 };
 
-  const ProtocolCard = ({ title, icon: Icon, color, desc, onClick, disabled = false }: any) => (
+const ProtocolCard = ({ title, icon: Icon, color, desc, onClick, disabled = false }: any) => (
   <motion.div
-      whileHover={{ y: disabled ? 0 : -5 }}
-      onClick={disabled ? undefined : onClick}
-      className={`bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[32px] p-8 flex flex-col items-center text-center group transition-all ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-white/20'}`}
+    whileHover={{ y: disabled ? 0 : -5 }}
+    onClick={disabled ? undefined : onClick}
+    className={`bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[32px] p-8 flex flex-col items-center text-center group transition-all ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-white/20'}`}
   >
     <div className="w-16 h-16 rounded-2xl mb-6 flex items-center justify-center transition-all group-hover:scale-110" style={{ backgroundColor: `${color}10`, color }}>
       <Icon className="w-8 h-8" />
     </div>
     <h2 className="text-xl font-black uppercase tracking-widest mb-3">{title}</h2>
     <p className="text-[10px] text-white/20 leading-relaxed uppercase tracking-wider mb-8">{desc}</p>
-      <button disabled={disabled} className={`w-full py-3 rounded-xl border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all ${disabled ? 'bg-white/5 text-white/30' : 'group-hover:bg-white group-hover:text-[#080A0F]'}`}>
-        {disabled ? 'Configuración necesaria' : 'Iniciar Vínculo'}
-      </button>
+    <button disabled={disabled} className={`w-full py-3 rounded-xl border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all ${disabled ? 'bg-white/5 text-white/30' : 'group-hover:bg-white group-hover:text-[#080A0F]'}`}>
+      {disabled ? 'Configuración necesaria' : 'Iniciar Vínculo'}
+    </button>
   </motion.div>
 );

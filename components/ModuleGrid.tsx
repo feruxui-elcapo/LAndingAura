@@ -1,18 +1,16 @@
 
 import React from 'react';
 import { Brain, Zap, Target, ArrowUpRight, ShieldX, Activity } from 'lucide-react';
-import { TestDefinition } from '../types';
-
+import { TestDefinition } from '../App';
 
 interface ModuleCardProps {
   test: TestDefinition;
   onClick: (id: string) => void;
 }
 
-const ModuleCard: React.FC<ModuleCardProps> = ({ test, onClick }) => {
-
+const ModuleCard = ({ test, onClick }: ModuleCardProps) => {
   const getIcon = () => {
-    switch (test.type) {
+    switch(test.type) {
       case 'mfc': return Brain;
       case 'bart': return Target;
       case 'gonogo': return ShieldX;
@@ -22,7 +20,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ test, onClick }) => {
   const Icon = getIcon();
 
   return (
-    <div
+    <div 
       onClick={() => onClick(test.id)}
       className="group rounded-[32px] bg-white/[0.03] border border-white/10 p-4 hover:border-white/20 transition-all cursor-pointer relative overflow-hidden"
     >

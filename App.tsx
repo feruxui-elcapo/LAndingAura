@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Hero } from './components/Hero';
@@ -16,13 +17,25 @@ import { ProfessionalPanel } from './components/ProfessionalPanel';
 import { CorporatePanel } from './components/CorporatePanel';
 import { SystemBottomNav } from './components/SystemBottomNav';
 import LiquidEther from './components/LiquidEther';
-import { supabase } from './lib/supabase';
-import { Session } from '@supabase/supabase-js';
-import { UserRole, ViewState, BiometricPoint, PerformanceLog, TestDefinition } from './types';
 
+export type UserRole = 'explorer' | 'professional' | 'corporate' | 'architect';
+export type ViewState = 'landing' | 'airlock' | 'interface' | 'evaluation' | 'nexus' | 'pro_dash' | 'corp_dash';
 
+export interface BiometricPoint {
+  subject: string;
+  A: number;
+  fullMark: number;
+  ideal?: number;
+}
 
-
+export interface TestDefinition {
+  id: string;
+  type: 'mfc' | 'stroop' | 'bart' | 'gonogo';
+  title: string;
+  description: string;
+  config: any;
+  color: string;
+}
 
 const DEFAULT_TESTS: TestDefinition[] = [
   {
@@ -80,108 +93,37 @@ const DEFAULT_DATA: BiometricPoint[] = [
 ];
 
 const App: React.FC = () => {
-
-
   const [view, setView] = useState<ViewState>('landing');
   const [role, setRole] = useState<UserRole>('explorer');
-  const [testCatalog, setTestCatalog] = useState<TestDefinition[]>(DEFAULT_TESTS);
-  const [evaluations, setEvaluations] = useState<any[]>([]);
-
-
+  const [testCatalog, setTestCatalog] = useState<TestDefinition[]>(() => {
+    const saved = localStorage.getItem('aura_catalog');
+    return saved ? JSON.parse(saved) : DEFAULT_TESTS;
+  });
+  const [evaluations, setEvaluations] = useState<any[]>(() => {
+    const saved = localStorage.getItem('aura_evals');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [biometricData, setBiometricData] = useState<BiometricPoint[]>(DEFAULT_DATA);
   const [isAnalyzed, setIsAnalyzed] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) fetchProfile(session.user.id);
-    });
+    localStorage.setItem('aura_catalog', JSON.stringify(testCatalog));
+  }, [testCatalog]);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        fetchProfile(session.user.id);
-      } else {
-        setView('landing');
-      }
-    });
+  useEffect(() => {
+    localStorage.setItem('aura_evals', JSON.stringify(evaluations));
+  }, [evaluations]);
 
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-
-    if (data) {
-      setRole(data.role as UserRole);
-      fetchLatestSession(userId);
-      fetchEvaluations(userId);
-      fetchCatalog();
-      // Auto-navigation based on role if logged in
-      if (view === 'landing' || view === 'airlock') {
-        handleViewTransition(data.role as UserRole);
-      }
-    }
+  const handleStartAuth = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => setView('airlock'), 300);
   };
 
-  const fetchCatalog = async () => {
-    const { data } = await supabase.from('test_definitions').select('*');
-    if (data && data.length > 0) {
-      setTestCatalog(data as any);
-    }
-  };
-
-  const fetchEvaluations = async (userId: string) => {
-    const { data } = await supabase
-      .from('test_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'completed')
-      .order('finished_at', { ascending: false });
-
-    if (data) {
-      // Get the email from the current session or profile
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      const userEmail = currentSession?.user.email || 'User';
-
-      const formatted = data.map(d => ({
-        id: d.id,
-        timestamp: d.finished_at,
-        results: d.score_data?.results || [],
-        user: userEmail,
-        role: role
-      }));
-
-      setEvaluations(formatted);
-    }
-  };
-
-
-
-  const fetchLatestSession = async (userId: string) => {
-    const { data } = await supabase
-      .from('test_sessions')
-      .select('score_data')
-      .eq('user_id', userId)
-      .eq('status', 'completed')
-      .order('finished_at', { ascending: false })
-      .limit(1);
-
-    if (data && data.length > 0 && data[0].score_data?.results) {
-      setBiometricData(data[0].score_data.results);
-      setIsAnalyzed(true);
-    }
-  };
-
-
-  const handleViewTransition = (selectedRole: UserRole) => {
-    switch (selectedRole) {
+  const handleLoginSuccess = (selectedRole: UserRole) => {
+    setRole(selectedRole);
+    switch(selectedRole) {
       case 'architect': setView('nexus'); break;
       case 'professional': setView('pro_dash'); break;
       case 'corporate': setView('corp_dash'); break;
@@ -189,82 +131,24 @@ const App: React.FC = () => {
     }
   };
 
-
-
-
-  const handleStartAuth = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setView('airlock'), 300);
-  };
-
-  const handleLoginSuccess = async (selectedRole: UserRole) => {
-    setRole(selectedRole);
-
-    // Sync role to Supabase profile if session exists
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await supabase.from('profiles').upsert({
-        id: session.user.id,
-        role: selectedRole,
-        updated_at: new Date().toISOString(),
-      });
-    }
-
-    handleViewTransition(selectedRole);
-  };
-
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
     setView('landing');
     setIsAnalyzed(false);
     setBiometricData(DEFAULT_DATA);
   };
 
-
-  const handleEvaluationComplete = async (results: BiometricPoint[], neuroLogs?: PerformanceLog[]) => {
-    // Save to Supabase
-    if (session) {
-      const { data: testSession } = await supabase
-        .from('test_sessions')
-        .insert({
-          user_id: session.user.id,
-          status: 'completed',
-          score_data: { results },
-          finished_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (testSession && neuroLogs && neuroLogs.length > 0) {
-        await supabase
-          .from('neuro_logs')
-          .insert({
-            session_id: testSession.id,
-            events: neuroLogs,
-          });
-      }
-
-      // Refresh evaluations from DB to ensure consistency
-      fetchEvaluations(session.user.id);
-    } else {
-      // Fallback for demo without session
-      const evaluationEntry = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        results,
-        user: 'Explorer_Alpha',
-        role: role
-      };
-      setEvaluations(prev => [...prev, evaluationEntry]);
-    }
-
+  const handleEvaluationComplete = (results: BiometricPoint[]) => {
+    setEvaluations(prev => [...prev, { 
+      id: Date.now(), 
+      timestamp: new Date().toISOString(), 
+      results, 
+      user: 'Explorer_Alpha',
+      role: role
+    }]);
     setBiometricData(results);
     setIsAnalyzed(true);
     setView('interface');
   };
-
-
 
   const isSystemView = ['interface', 'evaluation', 'nexus', 'pro_dash', 'corp_dash'].includes(view);
   const showBackground = view === 'landing' || view === 'airlock';
@@ -273,7 +157,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#080A0F] text-white selection:bg-[#00F3FF]/30 overflow-x-hidden font-['Plus_Jakarta_Sans']">
       <AnimatePresence>
         {showBackground && (
-          <motion.div
+          <motion.div 
             key="ether-bg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -281,11 +165,11 @@ const App: React.FC = () => {
             transition={{ duration: 1 }}
             className="fixed inset-0 pointer-events-none z-0"
           >
-            <LiquidEther colors={['#00F3FF', '#7B2CBF', '#080A0F']} autoSpeed={0.2} />
+            <LiquidEther colors={[ '#00F3FF', '#7B2CBF', '#080A0F' ]} autoSpeed={0.2} />
           </motion.div>
         )}
       </AnimatePresence>
-
+      
       <AnimatePresence mode="wait">
         {view === 'landing' && (
           <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -310,39 +194,37 @@ const App: React.FC = () => {
 
         {view === 'interface' && (
           <motion.div key="interface" className="relative z-20">
-            <IdentityCore
+            <IdentityCore 
               role={role}
-              onLogout={handleLogout}
-              onStartEvaluation={(id) => { setActiveModule(id); setView('evaluation'); }}
+              onLogout={handleLogout} 
+              onStartEvaluation={(id) => { setActiveModule(id); setView('evaluation'); }} 
               data={biometricData}
               isAnalyzed={isAnalyzed}
               onNexus={() => setView('nexus')}
               catalog={testCatalog}
-              evaluations={evaluations}
             />
-
           </motion.div>
         )}
 
         {view === 'nexus' && (
-          <NexusPanel
-            key="nexus"
-            onBack={() => setView('interface')}
-            onLogout={handleLogout}
+          <NexusPanel 
+            key="nexus" 
+            onBack={() => setView('interface')} 
+            onLogout={handleLogout} 
             catalog={testCatalog}
             setCatalog={setTestCatalog}
             evaluations={evaluations}
           />
         )}
-
+        
         {view === 'pro_dash' && <ProfessionalPanel key="pro" onBack={() => setView('interface')} onLogout={handleLogout} />}
         {view === 'corp_dash' && <CorporatePanel key="corp" onBack={() => setView('interface')} onLogout={handleLogout} evaluations={evaluations} />}
 
         {view === 'evaluation' && (
           <motion.div key="evaluation" className="relative z-40">
-            <EvaluationEngine
-              testDef={testCatalog.find(t => t.id === activeModule) || testCatalog[0]}
-              onComplete={handleEvaluationComplete}
+            <EvaluationEngine 
+              testDef={testCatalog.find(t => t.id === activeModule) || testCatalog[0]} 
+              onComplete={handleEvaluationComplete} 
               onCancel={() => setView('interface')}
             />
           </motion.div>
@@ -351,9 +233,9 @@ const App: React.FC = () => {
 
       <AnimatePresence>
         {isSystemView && (
-          <SystemBottomNav
-            activeView={view}
-            setView={setView}
+          <SystemBottomNav 
+            activeView={view} 
+            setView={setView} 
             onLogout={handleLogout}
             role={role}
           />

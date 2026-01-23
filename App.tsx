@@ -30,7 +30,7 @@ export interface BiometricPoint {
 
 export interface TestDefinition {
   id: string;
-  type: 'mfc' | 'stroop' | 'bart' | 'gonogo' | 'likert';
+  type: 'mfc' | 'stroop' | 'bart' | 'gonogo';
   title: string;
   description: string;
   config: any;
@@ -129,7 +129,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('aura_evals');
     return saved ? JSON.parse(saved) : [];
   });
-
+  
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [biometricData, setBiometricData] = useState<BiometricPoint[]>(DEFAULT_DATA);
   const [isAnalyzed, setIsAnalyzed] = useState(false);
@@ -149,7 +149,7 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = (selectedRole: UserRole) => {
     setRole(selectedRole);
-    switch (selectedRole) {
+    switch(selectedRole) {
       case 'architect': setView('nexus'); break;
       case 'professional': setView('pro_dash'); break;
       case 'corporate': setView('corp_dash'); break;
@@ -164,10 +164,10 @@ const App: React.FC = () => {
   };
 
   const handleEvaluationComplete = (results: BiometricPoint[]) => {
-    setEvaluations(prev => [...prev, {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      results,
+    setEvaluations(prev => [...prev, { 
+      id: Date.now(), 
+      timestamp: new Date().toISOString(), 
+      results, 
       user: 'Explorer_Alpha',
       role: role
     }]);
@@ -183,7 +183,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#080A0F] text-white selection:bg-[#00F3FF]/30 overflow-x-hidden font-['Plus_Jakarta_Sans']">
       <AnimatePresence>
         {showBackground && (
-          <motion.div
+          <motion.div 
             key="ether-bg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -191,11 +191,11 @@ const App: React.FC = () => {
             transition={{ duration: 1 }}
             className="fixed inset-0 pointer-events-none z-0"
           >
-            <LiquidEther colors={['#00F3FF', '#7B2CBF', '#080A0F']} autoSpeed={0.2} />
+            <LiquidEther colors={[ '#00F3FF', '#7B2CBF', '#080A0F' ]} autoSpeed={0.2} />
           </motion.div>
         )}
       </AnimatePresence>
-
+      
       <AnimatePresence mode="wait">
         {view === 'landing' && (
           <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -220,10 +220,10 @@ const App: React.FC = () => {
 
         {view === 'interface' && (
           <motion.div key="interface" className="relative z-20">
-            <IdentityCore
+            <IdentityCore 
               role={role}
-              onLogout={handleLogout}
-              onStartEvaluation={(id) => { setActiveModule(id); setView('evaluation'); }}
+              onLogout={handleLogout} 
+              onStartEvaluation={(id) => { setActiveModule(id); setView('evaluation'); }} 
               data={biometricData}
               isAnalyzed={isAnalyzed}
               onNexus={() => setView('nexus')}
@@ -233,24 +233,24 @@ const App: React.FC = () => {
         )}
 
         {view === 'nexus' && (
-          <NexusPanel
-            key="nexus"
-            onBack={() => setView('interface')}
-            onLogout={handleLogout}
+          <NexusPanel 
+            key="nexus" 
+            onBack={() => setView('interface')} 
+            onLogout={handleLogout} 
             catalog={testCatalog}
             setCatalog={setTestCatalog}
             evaluations={evaluations}
           />
         )}
-
+        
         {view === 'pro_dash' && <ProfessionalPanel key="pro" onBack={() => setView('interface')} onLogout={handleLogout} />}
         {view === 'corp_dash' && <CorporatePanel key="corp" onBack={() => setView('interface')} onLogout={handleLogout} evaluations={evaluations} />}
 
         {view === 'evaluation' && (
           <motion.div key="evaluation" className="relative z-40">
-            <EvaluationEngine
-              testDef={testCatalog.find(t => t.id === activeModule) || testCatalog[0]}
-              onComplete={handleEvaluationComplete}
+            <EvaluationEngine 
+              testDef={testCatalog.find(t => t.id === activeModule) || testCatalog[0]} 
+              onComplete={handleEvaluationComplete} 
               onCancel={() => setView('interface')}
             />
           </motion.div>
@@ -259,9 +259,9 @@ const App: React.FC = () => {
 
       <AnimatePresence>
         {isSystemView && (
-          <SystemBottomNav
-            activeView={view}
-            setView={setView}
+          <SystemBottomNav 
+            activeView={view} 
+            setView={setView} 
             onLogout={handleLogout}
             role={role}
           />

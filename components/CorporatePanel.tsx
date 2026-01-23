@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building2, TrendingUp, Users, Target, ShieldCheck, ChevronLeft } from 'lucide-react';
+import { Building2, TrendingUp, Users, Target, ShieldCheck } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 
 const teamData = [
@@ -12,20 +12,15 @@ const teamData = [
   { subject: 'Resiliencia', value: 90 },
 ];
 
-export const CorporatePanel: React.FC<any> = ({ onBack, onLogout, evaluations = [] }) => {
+export const CorporatePanel: React.FC<any> = () => {
   return (
     <div className="min-h-screen bg-[#080A0F] text-white p-6 md:p-12 pb-32">
-      <header className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-16">
-        <div className="flex items-center gap-6">
-          <button onClick={onBack} className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-4xl font-black uppercase tracking-tighter flex items-center gap-4">
-              <Building2 className="w-10 h-10 text-[#FF9FFC]" /> TEAM_ANALYTICS
-            </h1>
-            <p className="text-xs text-[#FF9FFC] font-bold uppercase tracking-[0.4em] mt-2">ORGANIZACIÓN: TECH_CORP_GLOBAL</p>
-          </div>
+      <header className="max-w-7xl mx-auto flex justify-between items-end mb-16">
+        <div>
+          <h1 className="text-4xl font-black uppercase tracking-tighter flex items-center gap-4">
+            <Building2 className="w-10 h-10 text-[#FF9FFC]" /> TEAM_ANALYTICS
+          </h1>
+          <p className="text-xs text-[#FF9FFC] font-bold uppercase tracking-[0.4em] mt-2">ORGANIZACIÓN: TECH_CORP_GLOBAL</p>
         </div>
         <div className="bg-white/5 border border-white/10 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white/40">
           Licencias: 142 / 200
@@ -34,10 +29,10 @@ export const CorporatePanel: React.FC<any> = ({ onBack, onLogout, evaluations = 
 
       <main className="max-w-7xl mx-auto space-y-8">
         <div className="grid md:grid-cols-4 gap-6">
-          <CorpStat icon={Users} label="Sujetos Evaluados" value={evaluations.length || "142"} />
-          <CorpStat icon={Target} label="Precisión Global" value="98.1%" />
-          <CorpStat icon={TrendingUp} label="Crecimiento Trim." value="+12%" />
-          <CorpStat icon={ShieldCheck} label="Fuga de Talento" value="Baja" />
+           <CorpStat icon={Users} label="Sujetos Evaluados" value="142" />
+           <CorpStat icon={Target} label="Precisión Global" value="98.1%" />
+           <CorpStat icon={TrendingUp} label="Crecimiento Trim." value="+12%" />
+           <CorpStat icon={ShieldCheck} label="Fuga de Talento" value="Baja" />
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8">
@@ -59,7 +54,7 @@ export const CorporatePanel: React.FC<any> = ({ onBack, onLogout, evaluations = 
               <h4 className="text-sm font-black uppercase tracking-widest mb-4">Insights de Gestión</h4>
               <p className="text-xs text-white/40 leading-relaxed uppercase tracking-widest">El equipo presenta una tendencia de alta competencia social pero una saturación en el Motor de Foco. Se recomienda optimización de flujos Lógicos.</p>
             </div>
-
+            
             <button className="w-full py-6 bg-white text-[#080A0F] font-black rounded-[32px] text-xs tracking-[0.4em] uppercase hover:scale-105 transition-all">
               Exportar Reporte Global .PDF
             </button>
@@ -72,8 +67,8 @@ export const CorporatePanel: React.FC<any> = ({ onBack, onLogout, evaluations = 
 
 const CorpStat = ({ icon: Icon, label, value }: any) => (
   <div className="p-8 rounded-[32px] bg-white/[0.02] border border-white/5">
-    <Icon className="w-5 h-5 text-white/20 mb-4" />
-    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">{label}</p>
-    <p className="text-3xl font-black">{value}</p>
+     <Icon className="w-5 h-5 text-white/20 mb-4" />
+     <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">{label}</p>
+     <p className="text-3xl font-black">{value}</p>
   </div>
 );

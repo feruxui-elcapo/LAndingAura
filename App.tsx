@@ -66,6 +66,14 @@ const DEFAULT_TESTS: TestDefinition[] = [
     }
   },
   {
+    id: 'attention',
+    type: 'stroop',
+    title: 'Motor B1: Stroop',
+    description: 'Atención selectiva y control inhibitorio.',
+    color: '#00F3FF',
+    config: {}
+  },
+  {
     id: 'impulse',
     type: 'gonogo',
     title: 'Motor B2: Impulso',
@@ -80,6 +88,14 @@ const DEFAULT_TESTS: TestDefinition[] = [
     description: 'Decisión bajo presión.',
     color: '#FF9FFC',
     config: { rounds: 3, maxPumps: 15 }
+  },
+  {
+    id: 'self-report',
+    type: 'likert',
+    title: 'Motor D: Autoinforme',
+    description: 'Percepción subjetiva de competencias.',
+    color: '#FF9FFC',
+    config: { questions: [], scaleSize: 5 }
   }
 ];
 
@@ -97,7 +113,17 @@ const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>('explorer');
   const [testCatalog, setTestCatalog] = useState<TestDefinition[]>(() => {
     const saved = localStorage.getItem('aura_catalog');
-    return saved ? JSON.parse(saved) : DEFAULT_TESTS;
+    if (!saved) return DEFAULT_TESTS;
+
+    const parsedSaved = JSON.parse(saved) as TestDefinition[];
+    // Merge missing default tests into saved catalog
+    const merged = [...parsedSaved];
+    DEFAULT_TESTS.forEach(def => {
+      if (!merged.find(t => t.id === def.id)) {
+        merged.push(def);
+      }
+    });
+    return merged;
   });
   const [evaluations, setEvaluations] = useState<any[]>(() => {
     const saved = localStorage.getItem('aura_evals');
@@ -173,13 +199,13 @@ const App: React.FC = () => {
       <AnimatePresence mode="wait">
         {view === 'landing' && (
           <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <Navbar scrolled={false} />
+            <Navbar scrolled={false} onStart={handleStartAuth} />
             <main className="relative z-10">
               <Hero onStart={handleStartAuth} />
               <ScrollPhrase />
               <Features />
               <DataVisuals />
-              <RolesSection />
+              <RolesSection onStart={handleStartAuth} />
               <CTA onStart={handleStartAuth} />
             </main>
             <Footer />

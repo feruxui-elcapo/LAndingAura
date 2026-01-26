@@ -28,6 +28,24 @@ export interface BiometricPoint {
   ideal?: number;
 }
 
+export interface PatientRecord {
+  id: string;
+  name: string;
+  email: string;
+  status: 'active' | 'pending';
+  assignedTests: string[]; // List of test IDs
+  resultsShared: boolean;
+  history: any[];
+}
+
+export interface AuraNotification {
+  id: string;
+  type: 'data_access' | 'test_invite';
+  testId?: string;
+  from: string;
+  timestamp: string;
+}
+
 export interface TestDefinition {
   id: string;
   type: 'mfc' | 'stroop' | 'bart' | 'gonogo' | 'likert';
@@ -41,7 +59,7 @@ const DEFAULT_TESTS: TestDefinition[] = [
   {
     id: 'cognitive',
     type: 'mfc',
-    title: 'Motor A: MFC',
+    title: 'MFC',
     description: 'Jerarquía de personalidad ipsativa.',
     color: '#00F3FF',
     config: {
@@ -68,7 +86,7 @@ const DEFAULT_TESTS: TestDefinition[] = [
   {
     id: 'attention',
     type: 'stroop',
-    title: 'Motor B1: Stroop',
+    title: 'Stroop',
     description: 'Atención selectiva y control inhibitorio.',
     color: '#00F3FF',
     config: {}
@@ -76,7 +94,7 @@ const DEFAULT_TESTS: TestDefinition[] = [
   {
     id: 'impulse',
     type: 'gonogo',
-    title: 'Motor B2: Impulso',
+    title: 'Impulso',
     description: 'Inhibición motora Go/No-Go.',
     color: '#7B2CBF',
     config: { totalTrials: 10, goProbability: 0.7 }
@@ -84,7 +102,7 @@ const DEFAULT_TESTS: TestDefinition[] = [
   {
     id: 'risk',
     type: 'bart',
-    title: 'Motor C: Riesgo',
+    title: 'Riesgo',
     description: 'Decisión bajo presión.',
     color: '#FF9FFC',
     config: { rounds: 3, maxPumps: 15 }
@@ -92,7 +110,7 @@ const DEFAULT_TESTS: TestDefinition[] = [
   {
     id: 'self-report',
     type: 'likert',
-    title: 'Motor D: Autoinforme',
+    title: 'Autoinforme',
     description: 'Percepción subjetiva de competencias.',
     color: '#FF9FFC',
     config: { questions: [], scaleSize: 5 }
@@ -129,6 +147,16 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('aura_evals');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [patients, setPatients] = useState<PatientRecord[]>([
+    { id: '1', name: 'Sujeto_#821 (Alex)', email: 'alex@example.com', status: 'active', assignedTests: [], resultsShared: true, history: [] },
+    { id: '2', name: 'Sujeto_#825 (Marta)', email: 'marta@example.com', status: 'pending', assignedTests: [], resultsShared: false, history: [] }
+  ]);
+
+  const [notifications, setNotifications] = useState<AuraNotification[]>([
+    { id: 'n1', type: 'data_access', from: 'Dr. Smith', timestamp: new Date().toISOString() },
+    { id: 'n2', type: 'test_invite', from: 'Dr. Smith', testId: 'attention', timestamp: new Date().toISOString() }
+  ]);
 
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [biometricData, setBiometricData] = useState<BiometricPoint[]>(DEFAULT_DATA);
@@ -228,6 +256,17 @@ const App: React.FC = () => {
               isAnalyzed={isAnalyzed}
               onNexus={() => setView('nexus')}
               catalog={testCatalog}
+              notifications={notifications}
+              setNotifications={setNotifications}
+              onAcceptDataRequest={() => {
+                setPatients(prev => prev.map(p =>
+                  p.email === 'alex@example.com' ? { ...p, resultsShared: true, status: 'active' } : p
+                ));
+              }}
+              onStartTestInvitation={(testId) => {
+                setActiveModule(testId);
+                setView('evaluation');
+              }}
             />
           </motion.div>
         )}
@@ -243,7 +282,19 @@ const App: React.FC = () => {
           />
         )}
 
-        {view === 'pro_dash' && <ProfessionalPanel key="pro" onBack={() => setView('interface')} onLogout={handleLogout} />}
+        {view === 'pro_dash' && (
+          <ProfessionalPanel
+            key="pro"
+            onBack={() => setView('interface')}
+            onLogout={handleLogout}
+            catalog={testCatalog}
+            patients={patients}
+            setPatients={setPatients}
+            notifications={notifications}
+            setNotifications={setNotifications}
+            evaluations={evaluations}
+          />
+        )}
         {view === 'corp_dash' && <CorporatePanel key="corp" onBack={() => setView('interface')} onLogout={handleLogout} evaluations={evaluations} />}
 
         {view === 'evaluation' && (

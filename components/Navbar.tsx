@@ -4,10 +4,9 @@ import { Menu } from 'lucide-react';
 
 interface NavbarProps {
   scrolled: boolean;
-  onStart: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ scrolled, onStart }) => {
+export const Navbar: React.FC<NavbarProps> = ({ scrolled }) => {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-[#080A0F]/90 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-8'}`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -19,10 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({ scrolled, onStart }) => {
           <a href="#" className="hover:text-[#00F3FF] transition-colors">Tecnología</a>
           <a href="#" className="hover:text-[#00F3FF] transition-colors">Visualización</a>
           <a href="#" className="hover:text-[#00F3FF] transition-colors">Seguridad</a>
-          <button
-            onClick={onStart}
-            className="px-5 py-2.5 rounded-xl border border-white/10 text-white hover:bg-white/5 transition-all"
-          >
+          <button className="px-5 py-2.5 rounded-xl border border-white/10 text-white hover:bg-white/5 transition-all">
             Acceso
           </button>
         </div>

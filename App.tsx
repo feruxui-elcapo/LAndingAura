@@ -28,27 +28,9 @@ export interface BiometricPoint {
   ideal?: number;
 }
 
-export interface PatientRecord {
-  id: string;
-  name: string;
-  email: string;
-  status: 'active' | 'pending';
-  assignedTests: string[]; // List of test IDs
-  resultsShared: boolean;
-  history: any[];
-}
-
-export interface AuraNotification {
-  id: string;
-  type: 'data_access' | 'test_invite';
-  testId?: string;
-  from: string;
-  timestamp: string;
-}
-
 export interface TestDefinition {
   id: string;
-  type: 'mfc' | 'stroop' | 'bart' | 'gonogo' | 'likert';
+  type: 'mfc' | 'stroop' | 'bart' | 'gonogo';
   title: string;
   description: string;
   config: any;
@@ -59,7 +41,7 @@ const DEFAULT_TESTS: TestDefinition[] = [
   {
     id: 'cognitive',
     type: 'mfc',
-    title: 'MFC',
+    title: 'Motor A: MFC',
     description: 'Jerarquía de personalidad ipsativa.',
     color: '#00F3FF',
     config: {
@@ -84,17 +66,9 @@ const DEFAULT_TESTS: TestDefinition[] = [
     }
   },
   {
-    id: 'attention',
-    type: 'stroop',
-    title: 'Stroop',
-    description: 'Atención selectiva y control inhibitorio.',
-    color: '#00F3FF',
-    config: {}
-  },
-  {
     id: 'impulse',
     type: 'gonogo',
-    title: 'Impulso',
+    title: 'Motor B2: Impulso',
     description: 'Inhibición motora Go/No-Go.',
     color: '#7B2CBF',
     config: { totalTrials: 10, goProbability: 0.7 }
@@ -102,18 +76,10 @@ const DEFAULT_TESTS: TestDefinition[] = [
   {
     id: 'risk',
     type: 'bart',
-    title: 'Riesgo',
+    title: 'Motor C: Riesgo',
     description: 'Decisión bajo presión.',
     color: '#FF9FFC',
     config: { rounds: 3, maxPumps: 15 }
-  },
-  {
-    id: 'self-report',
-    type: 'likert',
-    title: 'Autoinforme',
-    description: 'Percepción subjetiva de competencias.',
-    color: '#FF9FFC',
-    config: { questions: [], scaleSize: 5 }
   }
 ];
 
@@ -131,33 +97,13 @@ const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>('explorer');
   const [testCatalog, setTestCatalog] = useState<TestDefinition[]>(() => {
     const saved = localStorage.getItem('aura_catalog');
-    if (!saved) return DEFAULT_TESTS;
-
-    const parsedSaved = JSON.parse(saved) as TestDefinition[];
-    // Merge missing default tests into saved catalog
-    const merged = [...parsedSaved];
-    DEFAULT_TESTS.forEach(def => {
-      if (!merged.find(t => t.id === def.id)) {
-        merged.push(def);
-      }
-    });
-    return merged;
+    return saved ? JSON.parse(saved) : DEFAULT_TESTS;
   });
   const [evaluations, setEvaluations] = useState<any[]>(() => {
     const saved = localStorage.getItem('aura_evals');
     return saved ? JSON.parse(saved) : [];
   });
-
-  const [patients, setPatients] = useState<PatientRecord[]>([
-    { id: '1', name: 'Sujeto_#821 (Alex)', email: 'alex@example.com', status: 'active', assignedTests: [], resultsShared: true, history: [] },
-    { id: '2', name: 'Sujeto_#825 (Marta)', email: 'marta@example.com', status: 'pending', assignedTests: [], resultsShared: false, history: [] }
-  ]);
-
-  const [notifications, setNotifications] = useState<AuraNotification[]>([
-    { id: 'n1', type: 'data_access', from: 'Dr. Smith', timestamp: new Date().toISOString() },
-    { id: 'n2', type: 'test_invite', from: 'Dr. Smith', testId: 'attention', timestamp: new Date().toISOString() }
-  ]);
-
+  
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [biometricData, setBiometricData] = useState<BiometricPoint[]>(DEFAULT_DATA);
   const [isAnalyzed, setIsAnalyzed] = useState(false);
@@ -177,7 +123,7 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = (selectedRole: UserRole) => {
     setRole(selectedRole);
-    switch (selectedRole) {
+    switch(selectedRole) {
       case 'architect': setView('nexus'); break;
       case 'professional': setView('pro_dash'); break;
       case 'corporate': setView('corp_dash'); break;
@@ -192,10 +138,10 @@ const App: React.FC = () => {
   };
 
   const handleEvaluationComplete = (results: BiometricPoint[]) => {
-    setEvaluations(prev => [...prev, {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      results,
+    setEvaluations(prev => [...prev, { 
+      id: Date.now(), 
+      timestamp: new Date().toISOString(), 
+      results, 
       user: 'Explorer_Alpha',
       role: role
     }]);
@@ -211,7 +157,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#080A0F] text-white selection:bg-[#00F3FF]/30 overflow-x-hidden font-['Plus_Jakarta_Sans']">
       <AnimatePresence>
         {showBackground && (
-          <motion.div
+          <motion.div 
             key="ether-bg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -219,21 +165,21 @@ const App: React.FC = () => {
             transition={{ duration: 1 }}
             className="fixed inset-0 pointer-events-none z-0"
           >
-            <LiquidEther colors={['#00F3FF', '#7B2CBF', '#080A0F']} autoSpeed={0.2} />
+            <LiquidEther colors={[ '#00F3FF', '#7B2CBF', '#080A0F' ]} autoSpeed={0.2} />
           </motion.div>
         )}
       </AnimatePresence>
-
+      
       <AnimatePresence mode="wait">
         {view === 'landing' && (
           <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <Navbar scrolled={false} onStart={handleStartAuth} />
+            <Navbar scrolled={false} />
             <main className="relative z-10">
               <Hero onStart={handleStartAuth} />
               <ScrollPhrase />
               <Features />
               <DataVisuals />
-              <RolesSection onStart={handleStartAuth} />
+              <RolesSection />
               <CTA onStart={handleStartAuth} />
             </main>
             <Footer />
@@ -248,60 +194,37 @@ const App: React.FC = () => {
 
         {view === 'interface' && (
           <motion.div key="interface" className="relative z-20">
-            <IdentityCore
+            <IdentityCore 
               role={role}
-              onLogout={handleLogout}
-              onStartEvaluation={(id) => { setActiveModule(id); setView('evaluation'); }}
+              onLogout={handleLogout} 
+              onStartEvaluation={(id) => { setActiveModule(id); setView('evaluation'); }} 
               data={biometricData}
               isAnalyzed={isAnalyzed}
               onNexus={() => setView('nexus')}
               catalog={testCatalog}
-              notifications={notifications}
-              setNotifications={setNotifications}
-              onAcceptDataRequest={() => {
-                setPatients(prev => prev.map(p =>
-                  p.email === 'alex@example.com' ? { ...p, resultsShared: true, status: 'active' } : p
-                ));
-              }}
-              onStartTestInvitation={(testId) => {
-                setActiveModule(testId);
-                setView('evaluation');
-              }}
             />
           </motion.div>
         )}
 
         {view === 'nexus' && (
-          <NexusPanel
-            key="nexus"
-            onBack={() => setView('interface')}
-            onLogout={handleLogout}
+          <NexusPanel 
+            key="nexus" 
+            onBack={() => setView('interface')} 
+            onLogout={handleLogout} 
             catalog={testCatalog}
             setCatalog={setTestCatalog}
             evaluations={evaluations}
           />
         )}
-
-        {view === 'pro_dash' && (
-          <ProfessionalPanel
-            key="pro"
-            onBack={() => setView('interface')}
-            onLogout={handleLogout}
-            catalog={testCatalog}
-            patients={patients}
-            setPatients={setPatients}
-            notifications={notifications}
-            setNotifications={setNotifications}
-            evaluations={evaluations}
-          />
-        )}
+        
+        {view === 'pro_dash' && <ProfessionalPanel key="pro" onBack={() => setView('interface')} onLogout={handleLogout} />}
         {view === 'corp_dash' && <CorporatePanel key="corp" onBack={() => setView('interface')} onLogout={handleLogout} evaluations={evaluations} />}
 
         {view === 'evaluation' && (
           <motion.div key="evaluation" className="relative z-40">
-            <EvaluationEngine
-              testDef={testCatalog.find(t => t.id === activeModule) || testCatalog[0]}
-              onComplete={handleEvaluationComplete}
+            <EvaluationEngine 
+              testDef={testCatalog.find(t => t.id === activeModule) || testCatalog[0]} 
+              onComplete={handleEvaluationComplete} 
               onCancel={() => setView('interface')}
             />
           </motion.div>
@@ -310,9 +233,9 @@ const App: React.FC = () => {
 
       <AnimatePresence>
         {isSystemView && (
-          <SystemBottomNav
-            activeView={view}
-            setView={setView}
+          <SystemBottomNav 
+            activeView={view} 
+            setView={setView} 
             onLogout={handleLogout}
             role={role}
           />

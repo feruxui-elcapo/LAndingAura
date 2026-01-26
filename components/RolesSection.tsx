@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { User, HeartPulse, Building, ChevronRight } from 'lucide-react';
 
-const RoleAction = ({ icon: Icon, title, subtitle, points, delay, onStart }: any) => {
+const RoleAction = ({ icon: Icon, title, subtitle, points, delay }: any) => {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const RoleAction = ({ icon: Icon, title, subtitle, points, delay, onStart }: any
   }, []);
 
   return (
-    <div
+    <div 
       ref={cardRef}
       className="group p-10 rounded-[32px] bg-white/[0.02] border border-white/10 hover:border-[#00F3FF]/40 transition-all duration-300 flex flex-col h-full reveal"
       style={{ animationDelay: delay }}
@@ -53,17 +53,14 @@ const RoleAction = ({ icon: Icon, title, subtitle, points, delay, onStart }: any
           </li>
         ))}
       </ul>
-      <button
-        onClick={onStart}
-        className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 font-bold text-sm transition-all flex items-center justify-center gap-2 tracking-widest uppercase"
-      >
+      <button className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 font-bold text-sm transition-all flex items-center justify-center gap-2 tracking-widest uppercase">
         Ver más <ChevronRight className="w-4 h-4" />
       </button>
     </div>
   );
 };
 
-export const RolesSection: React.FC<{ onStart?: () => void }> = ({ onStart }) => {
+export const RolesSection: React.FC = () => {
   return (
     <section className="py-32 px-6">
       <div className="max-w-7xl mx-auto">
@@ -73,29 +70,26 @@ export const RolesSection: React.FC<{ onStart?: () => void }> = ({ onStart }) =>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          <RoleAction
+          <RoleAction 
             icon={User}
             subtitle="EXPLORADORES"
             title="Personal"
             points={["Descubrí quién sos realmente", "Obtené mapas visuales de tu mente", "Toda tu info segura y privada", "Tests gratis para comenzar"]}
             delay="0.1s"
-            onStart={onStart}
           />
-          <RoleAction
+          <RoleAction 
             icon={HeartPulse}
             subtitle="PROFESIONALES"
             title="Psicólogos"
             points={["Panel de control para pacientes", "Tests validados y automáticos", "Informes técnicos profundos", "Gestión clínica sin esfuerzo"]}
             delay="0.2s"
-            onStart={onStart}
           />
-          <RoleAction
+          <RoleAction 
             icon={Building}
             subtitle="ORGANIZACIONES"
             title="Empresas"
             points={["Identificá el talento real", "Evaluaciones grupales rápidas", "Mejorá el clima de tu equipo", "Selección basada en datos"]}
             delay="0.3s"
-            onStart={onStart}
           />
         </div>
       </div>

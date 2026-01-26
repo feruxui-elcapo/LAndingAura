@@ -1,6 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+    --color-deep-void: #080A0F;
+    --color-electric-cyan: #00F3FF;
+    --color-deep-violet: #7B2CBF;
+
+    --font-outfit: "Outfit", sans-serif;
+    --font-jakarta: "Plus Jakarta Sans", sans-serif;
+}
 
 :root {
     --deep-void: #080A0F;
@@ -8,7 +15,9 @@
     --deep-violet: #7B2CBF;
 }
 
-* { scroll-behavior: smooth; }
+* {
+    scroll-behavior: smooth;
+}
 
 body {
     background-color: var(--deep-void);
@@ -18,26 +27,49 @@ body {
     overflow-x: hidden;
 }
 
-h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; }
+h1,
+h2,
+h3,
+h4 {
+    font-family: 'Outfit', sans-serif;
+}
 
-.glow-cyan { filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.6)); }
-.glow-text-cyan { text-shadow: 0 0 20px rgba(0, 243, 255, 0.5); }
+.glow-cyan {
+    filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.6));
+}
+
+.glow-text-cyan {
+    text-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+}
 
 .bg-grid {
     background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
     background-size: 60px 60px;
 }
 
 @keyframes reveal {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
-.reveal { animation: reveal 1s ease forwards; }
+
+.reveal {
+    animation: reveal 1s ease forwards;
+}
 
 .noise-bg {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: url('https://grainy-gradients.vercel.app/noise.svg');
     opacity: 0.05;
     pointer-events: none;
@@ -45,7 +77,19 @@ h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; }
 }
 
 /* Custom scrollbar for sci-fi feel */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #080A0F; }
-::-webkit-scrollbar-thumb { background: #1a1d25; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #00F3FF; }
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: #080A0F;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1a1d25;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #00F3FF;
+}

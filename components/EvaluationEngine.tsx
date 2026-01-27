@@ -7,6 +7,7 @@ import { StaticTest } from './engines/StaticTest';
 import { StroopTask } from './engines/StroopTask';
 import { BARTTask } from './engines/BARTTask';
 import { GoNoGoTask } from './engines/GoNoGoTask';
+import { LikertTask } from './engines/LikertTask';
 
 interface EvaluationEngineProps {
   testDef: TestDefinition;
@@ -21,10 +22,14 @@ export const EvaluationEngine: React.FC<EvaluationEngineProps> = ({ testDef, onC
     switch (testDef.type) {
       case 'mfc':
         return <StaticTest onFinish={onComplete} config={testDef.config} />;
+      case 'stroop':
+        return <StroopTask onFinish={onComplete} config={testDef.config} />;
       case 'bart':
         return <BARTTask onFinish={onComplete} config={testDef.config} />;
       case 'gonogo':
         return <GoNoGoTask onFinish={onComplete} config={testDef.config} />;
+      case 'likert':
+        return <LikertTask onFinish={onComplete} config={testDef.config} />;
       default:
         return <StaticTest onFinish={onComplete} config={testDef.config} />;
     }
@@ -50,7 +55,7 @@ export const EvaluationEngine: React.FC<EvaluationEngineProps> = ({ testDef, onC
       <div className="flex-grow flex items-center justify-center p-6 relative z-10">
         <AnimatePresence mode="wait">
           {engineState === 'intro' ? (
-            <motion.div 
+            <motion.div
               key="intro"
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
               className="max-w-xl text-center space-y-8"
@@ -64,7 +69,7 @@ export const EvaluationEngine: React.FC<EvaluationEngineProps> = ({ testDef, onC
               <p className="text-white/40 text-sm font-medium leading-relaxed uppercase tracking-widest">
                 {testDef.description}
               </p>
-              <button 
+              <button
                 onClick={() => setEngineState('active')}
                 className="px-12 py-4 bg-[#00F3FF] text-[#080A0F] font-black rounded-2xl tracking-[0.2em] uppercase hover:scale-105 transition-all shadow-[0_0_30px_rgba(0,243,255,0.3)]"
               >

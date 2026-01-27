@@ -615,17 +615,17 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                 </div>
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Tipo de Protocolo</label>
-                  <select
+                  <CustomSelect
                     value={editingTest.type}
-                    onChange={e => setEditingTest({ ...editingTest, type: e.target.value as any })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF]"
-                  >
-                    <option value="mfc">MFC (Psicometría)</option>
-                    <option value="stroop">Stroop (Atención)</option>
-                    <option value="bart">BART (Riesgo)</option>
-                    <option value="gonogo">Go/No-Go (Impulso)</option>
-                    <option value="likert">Likert (Autoinforme)</option>
-                  </select>
+                    options={[
+                      { value: 'mfc', label: 'MFC (Psicometría)' },
+                      { value: 'stroop', label: 'Stroop (Atención)' },
+                      { value: 'bart', label: 'BART (Riesgo)' },
+                      { value: 'gonogo', label: 'Go/No-Go (Impulso)' },
+                      { value: 'likert', label: 'Likert (Autoinforme)' }
+                    ]}
+                    onChange={(val) => setEditingTest({ ...editingTest, type: val as any })}
+                  />
                 </div>
               </div>
 
@@ -683,22 +683,22 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                           placeholder="Ej: Me siento cómodo liderando equipos..."
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#00F3FF]"
                         />
-                        <select
+                        <CustomSelect
                           value={q.trait}
-                          onChange={e => {
+                          onChange={val => {
                             const questions = [...(editingTest.config.questions || [])];
-                            questions[idx] = { ...questions[idx], trait: e.target.value };
+                            questions[idx] = { ...questions[idx], trait: val };
                             setEditingTest({ ...editingTest, config: { ...editingTest.config, questions } });
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#00F3FF]"
-                        >
-                          <option value="Lógica">Lógica</option>
-                          <option value="Empatía">Empatía</option>
-                          <option value="Creatividad">Creatividad</option>
-                          <option value="Social">Social</option>
-                          <option value="Resiliencia">Resiliencia</option>
-                          <option value="Foco">Foco</option>
-                        </select>
+                          options={[
+                            { value: 'Lógica', label: 'Lógica' },
+                            { value: 'Empatía', label: 'Empatía' },
+                            { value: 'Creatividad', label: 'Creatividad' },
+                            { value: 'Social', label: 'Social' },
+                            { value: 'Resiliencia', label: 'Resiliencia' },
+                            { value: 'Foco', label: 'Foco' }
+                          ]}
+                        />
                       </div>
                     ))}
                     {(!editingTest.config.questions || editingTest.config.questions.length === 0) && (
@@ -708,15 +708,38 @@ export const NexusPanel: React.FC<NexusPanelProps> = ({ onBack, onLogout, catalo
                     )}
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Escala (1 a N)</label>
+                      <input
+                        type="number"
+                        min="3"
+                        max="10"
+                        value={editingTest.config.scaleSize || 5}
+                        onChange={e => setEditingTest({ ...editingTest, config: { ...editingTest.config, scaleSize: parseInt(e.target.value) } })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Etiqueta Mínima</label>
+                      <input
+                        type="text"
+                        value={editingTest.config.minLabel || 'Totalmente en Desacuerdo'}
+                        onChange={e => setEditingTest({ ...editingTest, config: { ...editingTest.config, minLabel: e.target.value } })}
+                        placeholder="Ej: Totalmente en Desacuerdo"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs outline-none focus:border-[#00F3FF]"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Escala (1 a N)</label>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Etiqueta Máxima</label>
                     <input
-                      type="number"
-                      min="3"
-                      max="10"
-                      value={editingTest.config.scaleSize || 5}
-                      onChange={e => setEditingTest({ ...editingTest, config: { ...editingTest.config, scaleSize: parseInt(e.target.value) } })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#00F3FF]"
+                      type="text"
+                      value={editingTest.config.maxLabel || 'Totalmente de Acuerdo'}
+                      onChange={e => setEditingTest({ ...editingTest, config: { ...editingTest.config, maxLabel: e.target.value } })}
+                      placeholder="Ej: Totalmente de Acuerdo"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs outline-none focus:border-[#00F3FF]"
                     />
                   </div>
                 </div>
